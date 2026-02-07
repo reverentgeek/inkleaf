@@ -1,0 +1,7 @@
+node_modules/
+dist/
+target/
+.env
+master-key.bin
+*.bin
+.DS_Store

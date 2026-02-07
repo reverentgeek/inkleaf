@@ -1,0 +1,8 @@
+{
+  "identifier": "default",
+  "description": "Default capability for MongoDB Notes",
+  "windows": ["main"],
+  "permissions": [
+    "core:default"
+  ]
+}
