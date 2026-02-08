@@ -1,4 +1,4 @@
-# MongoDB Notes
+# Inkleaf
 
 A Tauri v2 desktop app: personal Markdown knowledge base demonstrating MongoDB Atlas Search, Atlas Vector Search, and Client-Side Field Level Encryption (CSFLE).
 
@@ -13,7 +13,7 @@ A Tauri v2 desktop app: personal Markdown knowledge base demonstrating MongoDB A
 ## Project Structure
 
 ```
-mongodb-notes/
+inkleaf/
 ├── package.json              # Root: pnpm workspaces + concurrently scripts
 ├── pnpm-workspace.yaml
 ├── .env / .env.example
@@ -125,7 +125,7 @@ _id, title, markdown (encrypted via CSFLE Random), tags[], createdAt, updatedAt
 
 ### Frontend
 - Tailwind v4: CSS-first config via `@import "tailwindcss"` in globals.css, uses `@tailwindcss/vite` plugin (no tailwind.config.js or postcss.config.js)
-- Dark theme: slate-900 bg, indigo-500 accent, amber-500 vault accent
+- Dark theme: slate-900 bg, emerald-500 accent, amber-500 vault accent
 - Tauri v2 CSP must include `connect-src http://localhost:3001` for backend API access
 - `useSearch` hook: all returned functions must be wrapped in `useCallback` to prevent infinite re-render loops in consumers
 

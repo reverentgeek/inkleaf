@@ -31,16 +31,16 @@ export default function TagInput({ tags, onChange }: TagInputProps) {
   };
 
   return (
-    <div className="flex flex-wrap items-center gap-1.5 px-3 py-2 bg-slate-800 rounded-lg border border-slate-700 focus-within:border-indigo-500/50">
+    <div className="flex flex-wrap items-center gap-1.5 px-3 py-2 bg-slate-800 rounded-lg border border-slate-700 focus-within:border-emerald-500/50">
       {tags.map((tag) => (
         <span
           key={tag}
-          className="flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300"
+          className="flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300"
         >
           {tag}
           <button
             onClick={() => removeTag(tag)}
-            className="hover:text-indigo-100"
+            className="hover:text-emerald-100"
           >
             <X size={10} />
           </button>

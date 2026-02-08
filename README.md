@@ -1,4 +1,4 @@
-# MongoDB Notes
+# Inkleaf
 
 A desktop Markdown knowledge base built with **Tauri v2**, **React**, and **MongoDB Atlas** — showcasing Atlas Search, Atlas Vector Search, and Client-Side Field Level Encryption (CSFLE).
 
@@ -15,7 +15,7 @@ A desktop Markdown knowledge base built with **Tauri v2**, **React**, and **Mong
 
 ## Architecture
 
-```
+```text
 ┌─────────────────────────────────┐
 │  Tauri v2 Desktop Window        │
 │  React + Vite (localhost:5173)  │
@@ -27,7 +27,7 @@ A desktop Markdown knowledge base built with **Tauri v2**, **React**, and **Mong
                │ fetch (HTTP)
                ▼
 ┌─────────────────────────────────┐
-│  Node.js / Express (port 3001) │
+│  Node.js / Express (port 3001)  │
 │  - Notes CRUD                   │
 │  - Atlas Search pipelines       │
 │  - Vector Search pipelines      │
@@ -60,8 +60,8 @@ A desktop Markdown knowledge base built with **Tauri v2**, **React**, and **Mong
 ### 1. Clone and install
 
 ```bash
-git clone https://github.com/your-username/mongodb-notes.git
-cd mongodb-notes
+git clone https://github.com/your-username/inkleaf.git
+cd inkleaf
 pnpm install
 ```
 
@@ -73,8 +73,8 @@ cp .env.example .env
 
 Edit `.env` with your MongoDB Atlas connection string and (optionally) your OpenAI API key:
 
-```
-MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/mongodb-notes?retryWrites=true&w=majority
+```bash
+MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/inkleaf?retryWrites=true&w=majority
 OPENAI_API_KEY=sk-...
 ```
 
@@ -99,11 +99,13 @@ Inserts 18 sample notes covering MongoDB, React, TypeScript, and more. If `OPENA
 ### 5. Run the app
 
 **Desktop (Tauri):**
+
 ```bash
 pnpm dev:tauri
 ```
 
 **Browser only:**
+
 ```bash
 pnpm dev
 ```
@@ -124,7 +126,7 @@ pnpm create-data-key
 
 The `create-data-key` script outputs a base64 key ID. Add it to `.env`:
 
-```
+```bash
 ENCRYPTION_KEY_PATH=./master-key.bin
 CSFLE_DATA_KEY_ID=<base64 key from above>
 CRYPT_SHARED_LIB_PATH=/path/to/mongo_crypt_v1.dylib
@@ -137,7 +139,7 @@ Restart the backend, then toggle vault mode with the lock icon or `Cmd+Shift+V`.
 ## Keyboard Shortcuts
 
 | Shortcut | Action |
-|----------|--------|
+| ---------- | -------- |
 | `Cmd+K` | Open command palette (text search) |
 | `Cmd+Shift+K` | Open command palette (semantic search) |
 | `Cmd+Shift+V` | Toggle vault mode |
@@ -146,7 +148,7 @@ Restart the backend, then toggle vault mode with the lock icon or `Cmd+Shift+V`.
 ## Tech Stack
 
 | Layer | Technology |
-|-------|------------|
+| ------- | ------------ |
 | Desktop | Tauri v2 |
 | Frontend | React 19, Vite 7, Tailwind CSS 4 |
 | Editor | CodeMirror (`@uiw/react-codemirror`) |

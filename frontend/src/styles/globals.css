@@ -2,6 +2,16 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* Override slate palette with green-tinted darks */
+@theme {
+  --color-slate-950: #060F12;
+  --color-slate-900: #0E252B;
+  --color-slate-800: #163232;
+  --color-slate-700: #1E3F3B;
+  --color-slate-600: #2D5A50;
+  --color-slate-500: #4A7C6F;
+}
+
 @layer base {
   body {
     @apply bg-slate-900 text-slate-100 antialiased;

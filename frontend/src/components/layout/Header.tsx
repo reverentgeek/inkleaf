@@ -26,7 +26,7 @@ export default function Header({
           {sidebarOpen ? <PanelLeftClose size={16} /> : <PanelLeft size={16} />}
         </button>
         <h1 className="text-sm font-medium text-slate-200 truncate max-w-[300px]">
-          {title || "MongoDB Notes"}
+          {title || "Inkleaf"}
         </h1>
         {isVaultMode && <VaultBadge />}
       </div>

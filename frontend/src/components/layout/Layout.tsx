@@ -224,7 +224,7 @@ export default function Layout() {
               </p>
               <button
                 onClick={handleCreateNote}
-                className="mt-4 px-4 py-2 rounded-lg bg-indigo-500 hover:bg-indigo-600 text-white text-sm transition-colors"
+                className="mt-4 px-4 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white text-sm transition-colors"
               >
                 Create Note
               </button>

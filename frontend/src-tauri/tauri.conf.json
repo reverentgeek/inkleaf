@@ -1,7 +1,7 @@
 {
-  "productName": "MongoDB Notes",
+  "productName": "Inkleaf",
   "version": "1.0.0",
-  "identifier": "com.mongodb-notes.app",
+  "identifier": "com.inkleaf.app",
   "build": {
     "beforeDevCommand": "pnpm dev",
     "devUrl": "http://localhost:5173",
@@ -11,7 +11,7 @@
   "app": {
     "windows": [
       {
-        "title": "MongoDB Notes",
+        "title": "Inkleaf",
         "width": 1400,
         "height": 900,
         "minWidth": 900,

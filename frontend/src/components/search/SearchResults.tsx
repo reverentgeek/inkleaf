@@ -20,7 +20,7 @@ function renderHighlights(
         t.type === "hit" ? (
           <mark
             key={i}
-            className="bg-indigo-500/30 text-indigo-300 px-0.5 rounded"
+            className="bg-emerald-500/30 text-emerald-300 px-0.5 rounded"
           >
             {t.value}
           </mark>

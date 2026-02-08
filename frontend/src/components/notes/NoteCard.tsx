@@ -30,7 +30,7 @@ export default function NoteCard({
         isActive
           ? isVault
             ? "bg-amber-500/10 border-amber-500/30"
-            : "bg-indigo-500/10 border-indigo-500/30"
+            : "bg-emerald-500/10 border-emerald-500/30"
           : "bg-transparent border-transparent hover:bg-slate-800/50"
       }`}
     >

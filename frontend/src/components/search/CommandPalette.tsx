@@ -85,7 +85,7 @@ export default function CommandPalette({
             onClick={() => setMode("text")}
             className={`flex items-center gap-1.5 px-4 py-2 text-sm transition-colors ${
               mode === "text"
-                ? "text-indigo-400 border-b-2 border-indigo-400"
+                ? "text-emerald-400 border-b-2 border-emerald-400"
                 : "text-slate-500 hover:text-slate-300"
             }`}
           >
@@ -96,7 +96,7 @@ export default function CommandPalette({
             onClick={() => setMode("semantic")}
             className={`flex items-center gap-1.5 px-4 py-2 text-sm transition-colors ${
               mode === "semantic"
-                ? "text-indigo-400 border-b-2 border-indigo-400"
+                ? "text-emerald-400 border-b-2 border-emerald-400"
                 : "text-slate-500 hover:text-slate-300"
             }`}
           >
@@ -120,7 +120,7 @@ export default function CommandPalette({
             className="flex-1 px-3 py-3 bg-transparent text-sm text-slate-200 outline-none placeholder:text-slate-600"
           />
           {isSearching && (
-            <div className="w-4 h-4 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin" />
+            <div className="w-4 h-4 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin" />
           )}
         </div>
 

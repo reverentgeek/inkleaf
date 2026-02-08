@@ -10,5 +10,5 @@ export const config = {
   encryptionKeyPath: process.env.ENCRYPTION_KEY_PATH || "./master-key.bin",
   csfleDataKeyId: process.env.CSFLE_DATA_KEY_ID || "",
   cryptSharedLibPath: process.env.CRYPT_SHARED_LIB_PATH || "",
-  dbName: "mongodb-notes",
+  dbName: "inkleaf",
 } as const;

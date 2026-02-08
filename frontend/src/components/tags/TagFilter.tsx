@@ -28,7 +28,7 @@ export default function TagFilter({
             onClick={() => onToggle(tag)}
             className={`text-xs px-2 py-0.5 rounded-full transition-colors ${
               selectedTags.includes(tag)
-                ? "bg-indigo-500/30 text-indigo-300"
+                ? "bg-emerald-500/30 text-emerald-300"
                 : "bg-slate-800 text-slate-500 hover:text-slate-300"
             }`}
           >

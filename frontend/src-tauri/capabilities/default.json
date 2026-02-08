@@ -1,6 +1,6 @@
 {
   "identifier": "default",
-  "description": "Default capability for MongoDB Notes",
+  "description": "Default capability for Inkleaf",
   "windows": ["main"],
   "permissions": [
     "core:default"

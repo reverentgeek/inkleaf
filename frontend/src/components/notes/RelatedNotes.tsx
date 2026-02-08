@@ -43,7 +43,7 @@ export default function RelatedNotes({ noteId, onSelect }: RelatedNotesProps) {
   return (
     <div className="h-full flex flex-col">
       <div className="flex items-center gap-2 px-4 py-3 border-b border-slate-800">
-        <Sparkles size={14} className="text-indigo-400" />
+        <Sparkles size={14} className="text-emerald-400" />
         <span className="text-sm font-medium text-slate-300">
           Related Notes
         </span>
@@ -71,7 +71,7 @@ export default function RelatedNotes({ noteId, onSelect }: RelatedNotesProps) {
                 {r.title}
               </span>
             </div>
-            <div className="text-xs text-indigo-400 mt-1">
+            <div className="text-xs text-emerald-400 mt-1">
               {(r.score * 100).toFixed(0)}% similar
             </div>
           </button>

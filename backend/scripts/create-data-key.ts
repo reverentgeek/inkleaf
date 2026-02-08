@@ -7,7 +7,7 @@ import dotenv from "dotenv";
 dotenv.config({ path: resolve(import.meta.dirname, "../../.env") });
 
 const uri = process.env.MONGODB_URI!;
-const dbName = "mongodb-notes";
+const dbName = "inkleaf";
 const keyVaultNamespace = `${dbName}.encryption_keyVault`;
 const keyPath = resolve(
   import.meta.dirname,

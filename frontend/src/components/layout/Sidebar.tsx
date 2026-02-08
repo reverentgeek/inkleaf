@@ -1,4 +1,5 @@
-import { Plus, BookOpen, ChevronDown } from "lucide-react";
+import { Plus, ChevronDown } from "lucide-react";
+import InkleafLogo from "../InkleafLogo";
 import NoteList from "../notes/NoteList";
 import VaultToggle from "../vault/VaultToggle";
 import type { Note, VaultNote } from "../../api/client";
@@ -35,10 +36,7 @@ export default function Sidebar({
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800">
         <div className="flex items-center gap-2">
-          <BookOpen
-            size={16}
-            className={isVaultMode ? "text-amber-400" : "text-indigo-400"}
-          />
+          <InkleafLogo size={16} />
           <span className="text-sm font-semibold text-slate-200">
             {isVaultMode ? "Vault" : "Notes"}
           </span>
@@ -61,7 +59,7 @@ export default function Sidebar({
               onChange={(e) =>
                 onSetNotebook(e.target.value || null)
               }
-              className="w-full appearance-none bg-slate-800 text-sm text-slate-300 rounded-lg px-3 py-1.5 pr-8 border border-slate-700 focus:border-indigo-500/50 focus:outline-none"
+              className="w-full appearance-none bg-slate-800 text-sm text-slate-300 rounded-lg px-3 py-1.5 pr-8 border border-slate-700 focus:border-emerald-500/50 focus:outline-none"
             >
               <option value="">All Notebooks</option>
               {NOTEBOOKS.map((nb) => (
