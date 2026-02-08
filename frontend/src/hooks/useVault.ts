@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { api } from "../api/client";
 import { useAppStore } from "../stores/appStore";
 import type { VaultNote } from "../api/client";
@@ -43,15 +43,22 @@ export function useVault() {
     }
   }, [vaultNotes, setVaultNotes, setActiveNoteId]);
 
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+
   const updateVaultNote = useCallback(
-    async (id: string, data: Partial<VaultNote>) => {
-      try {
-        const updated = await api.vault.update(id, data);
-        setVaultNotes(vaultNotes.map((n) => (n._id === id ? updated : n)));
-        return updated;
-      } catch (err) {
-        console.error("Failed to update vault note:", err);
-      }
+    (id: string, data: Partial<VaultNote>) => {
+      // Optimistic local update immediately
+      setVaultNotes(vaultNotes.map((n) => (n._id === id ? { ...n, ...data } : n)));
+
+      // Debounce the API call
+      if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+      saveTimerRef.current = setTimeout(async () => {
+        try {
+          await api.vault.update(id, data);
+        } catch (err) {
+          console.error("Failed to update vault note:", err);
+        }
+      }, 400);
     },
     [vaultNotes, setVaultNotes],
   );

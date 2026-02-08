@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { api } from "../api/client";
 import { useAppStore } from "../stores/appStore";
 import type { Note } from "../api/client";
@@ -43,15 +43,22 @@ export function useNotes() {
     }
   }, [notes, activeNotebook, setNotes, setActiveNoteId]);
 
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+
   const updateNote = useCallback(
-    async (id: string, data: Partial<Note>) => {
-      try {
-        const updated = await api.notes.update(id, data);
-        setNotes(notes.map((n) => (n._id === id ? updated : n)));
-        return updated;
-      } catch (err) {
-        console.error("Failed to update note:", err);
-      }
+    (id: string, data: Partial<Note>) => {
+      // Optimistic local update immediately
+      setNotes(notes.map((n) => (n._id === id ? { ...n, ...data } : n)));
+
+      // Debounce the API call
+      if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+      saveTimerRef.current = setTimeout(async () => {
+        try {
+          await api.notes.update(id, data);
+        } catch (err) {
+          console.error("Failed to update note:", err);
+        }
+      }, 400);
     },
     [notes, setNotes],
   );

@@ -1,7 +1,8 @@
-import { useCallback } from "react";
+import { useCallback, useRef, useEffect } from "react";
 import Sidebar from "./Sidebar";
 import Header from "./Header";
 import MarkdownEditor from "../editor/MarkdownEditor";
+import type { MarkdownEditorHandle } from "../editor/MarkdownEditor";
 import MarkdownPreview from "../editor/MarkdownPreview";
 import TagInput from "../tags/TagInput";
 import RelatedNotes from "../notes/RelatedNotes";
@@ -10,7 +11,8 @@ import { useNotes } from "../../hooks/useNotes";
 import { useVault } from "../../hooks/useVault";
 import { useAppStore } from "../../stores/appStore";
 import type { Note } from "../../api/client";
-import { Eye, Edit3 } from "lucide-react";
+import { Eye, Edit3, WrapText } from "lucide-react";
+import InkleafLogo from "../InkleafLogo";
 
 export default function Layout() {
   const {
@@ -43,6 +45,24 @@ export default function Layout() {
     updateVaultNote,
     deleteVaultNote,
   } = useVault();
+
+  const editorRef = useRef<MarkdownEditorHandle>(null);
+
+  const handleFormat = useCallback(() => {
+    editorRef.current?.format();
+  }, []);
+
+  // Cmd+Shift+F: Format markdown
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === "f") {
+        e.preventDefault();
+        handleFormat();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [handleFormat]);
 
   const currentNote = isVaultMode ? activeVaultNote : activeNote;
 
@@ -159,7 +179,7 @@ export default function Layout() {
                 />
               </div>
 
-              {/* View mode toggle */}
+              {/* View mode toggle + format */}
               <div className="flex items-center gap-1 px-6 pb-2">
                 <button
                   onClick={() => setViewMode("edit")}
@@ -183,12 +203,26 @@ export default function Layout() {
                   <Eye size={12} />
                   Preview
                 </button>
+                {viewMode === "edit" && (
+                  <>
+                    <div className="w-px h-4 bg-slate-700 mx-1" />
+                    <button
+                      onClick={handleFormat}
+                      className="flex items-center gap-1 px-2 py-1 rounded text-xs text-slate-500 hover:text-slate-300 hover:bg-slate-800 transition-colors"
+                      title="Format (Cmd+Shift+F)"
+                    >
+                      <WrapText size={12} />
+                      Format
+                    </button>
+                  </>
+                )}
               </div>
 
               {/* Editor / Preview */}
               <div className="flex-1 overflow-hidden">
                 {viewMode === "edit" ? (
                   <MarkdownEditor
+                    ref={editorRef}
                     key={activeNoteId}
                     value={currentNote.markdown || ""}
                     onChange={handleMarkdownChange}
@@ -213,8 +247,8 @@ export default function Layout() {
           /* Empty state */
           <div className="flex-1 flex items-center justify-center">
             <div className="text-center">
-              <div className="text-6xl mb-4">
-                {isVaultMode ? "\uD83D\uDD12" : "\uD83D\uDCDD"}
+              <div className="mb-4 flex justify-center">
+                {isVaultMode ? <span className="text-6xl">{"\uD83D\uDD12"}</span> : <InkleafLogo size={64} />}
               </div>
               <h2 className="text-lg font-medium text-slate-400 mb-2">
                 {isVaultMode ? "Vault Mode" : "No note selected"}
