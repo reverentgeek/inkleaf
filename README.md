@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/inkleaf-logo.svg" width="120" alt="Inkleaf logo" />
+</p>
+
 # Inkleaf
 
 A desktop Markdown knowledge base built with **Tauri v2**, **React**, and **MongoDB Atlas** — showcasing Atlas Search, Atlas Vector Search, and Client-Side Field Level Encryption (CSFLE).
