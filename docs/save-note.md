@@ -2,9 +2,9 @@
 
 Traces the full data flow when a user edits a note in Inkleaf — from keystrokes in the Tauri webview through to MongoDB Atlas and async embedding generation.
 
-```
+```text
  Tauri Webview (localhost:5173)              Express Backend (localhost:3001)
- ================================            ================================
+ ================================            ==================================
  CodeMirror editor
    |
    v
@@ -28,8 +28,6 @@ Traces the full data flow when a user edits a note in Inkleaf — from keystroke
  Response (updated Note JSON)                   v
                                              1536-dim vector stored on `embedding` field
 ```
-
----
 
 ## Step 1: Tauri Webview — User Types in the Editor
 

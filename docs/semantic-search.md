@@ -2,7 +2,7 @@
 
 Traces the full data flow when a user performs a semantic (vector) search in Inkleaf — from the keyboard shortcut through OpenAI embedding to MongoDB Atlas Vector Search and back to the UI.
 
-```
+```text
  Tauri Webview (localhost:5173)              Express Backend (localhost:3001)
  ================================            ================================
  Cmd+Shift+K
