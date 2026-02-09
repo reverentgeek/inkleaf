@@ -47,8 +47,10 @@ export function useNotes() {
 
   const updateNote = useCallback(
     (id: string, data: Partial<Note>) => {
-      // Optimistic local update immediately
-      setNotes(notes.map((n) => (n._id === id ? { ...n, ...data } : n)));
+      // Optimistic local update: merge changes and move to top
+      const updated = notes.find((n) => n._id === id);
+      if (!updated) return;
+      setNotes([{ ...updated, ...data }, ...notes.filter((n) => n._id !== id)]);
 
       // Debounce the API call
       if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
