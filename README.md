@@ -14,7 +14,7 @@ A desktop Markdown knowledge base built with **Tauri v2**, **React**, and **Mong
 - **Atlas Search** — Full-text search with fuzzy matching, autocomplete, and highlighted results via `$search` aggregation
 - **Vector Search** — Semantic search powered by OpenAI `text-embedding-3-small` embeddings and `$vectorSearch`, plus a related notes panel
 - **CSFLE Vault** — Encrypted notes using Client-Side Field Level Encryption — the server never sees plaintext, with a raw endpoint to prove it
-- **Command Palette** — `Cmd+K` for text search, `Cmd+Shift+K` for semantic search
+- **Search Palette** — `Cmd+K` for text search, `Cmd+Shift+K` for semantic search
 - **Desktop App** — Native window via Tauri v2, with a dark theme and keyboard-driven workflow
 
 ## Architecture
@@ -24,7 +24,7 @@ A desktop Markdown knowledge base built with **Tauri v2**, **React**, and **Mong
 │  Tauri v2 Desktop Window        │
 │  React + Vite (localhost:5173)  │
 │  - Markdown editor (CodeMirror) │
-│  - Cmd+K command palette (cmdk) │
+│  - Cmd+K search palette (cmdk)  │
 │  - Related notes sidebar        │
 │  - Vault mode toggle            │
 └──────────────┬──────────────────┘
@@ -64,7 +64,7 @@ A desktop Markdown knowledge base built with **Tauri v2**, **React**, and **Mong
 ### 1. Clone and install
 
 ```bash
-git clone https://github.com/your-username/inkleaf.git
+git clone https://github.com/reverentgeek/inkleaf.git
 cd inkleaf
 pnpm install
 ```
@@ -146,6 +146,9 @@ Restart the backend, then toggle vault mode with the lock icon or `Cmd+Shift+V`.
 | ---------- | -------- |
 | `Cmd+K` | Open command palette (text search) |
 | `Cmd+Shift+K` | Open command palette (semantic search) |
+| `Cmd+E` | Switch to edit mode |
+| `Cmd+Shift+E` | Switch to preview mode |
+| `Cmd+Shift+F` | Format markdown |
 | `Cmd+Shift+V` | Toggle vault mode |
 | `Escape` | Close command palette |
 
