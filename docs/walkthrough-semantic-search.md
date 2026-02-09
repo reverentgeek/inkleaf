@@ -245,17 +245,18 @@ return db
 
 Key parameters of `$vectorSearch`:
 
-| Parameter | Value | Description |
-|-----------|-------|-------------|
-| `index` | `"notes_vector_index"` | The Atlas Vector Search index on the `notes` collection |
-| `path` | `"embedding"` | The document field containing the stored vectors |
-| `queryVector` | `embedding` | The 1536-dim vector from Step 6 |
-| `numCandidates` | `100` | How many candidates the ANN algorithm considers (higher = more accurate but slower) |
-| `limit` | `10` | Return the top 10 closest matches |
+| Parameter       | Value                  | Description                                                                         |
+| --------------- | ---------------------- | ----------------------------------------------------------------------------------- |
+| `index`         | `"notes_vector_index"` | The Atlas Vector Search index on the `notes` collection                             |
+| `path`          | `"embedding"`          | The document field containing the stored vectors                                    |
+| `queryVector`   | `embedding`            | The 1536-dim vector from Step 6                                                     |
+| `numCandidates` | `100`                  | How many candidates the ANN algorithm considers (higher = more accurate but slower) |
+| `limit`         | `10`                   | Return the top 10 closest matches                                                   |
 
 The `$project` stage shapes the output: it includes `title`, `markdown`, `tags`, and exposes the **cosine similarity score** via `{ $meta: "vectorSearchScore" }`. The score ranges from 0 to 1, where 1 is a perfect match.
 
 The `notes_vector_index` is an Atlas Vector Search index configured for:
+
 - **1536 dimensions** (matching `text-embedding-3-small` output)
 - **Cosine similarity** distance function
 
@@ -303,6 +304,7 @@ Back in the frontend, `useSearch` stores these in `semanticResults` state. The `
 ```
 
 In semantic mode, each result displays:
+
 - The note **title**
 - The similarity **score as a percentage** (e.g., `0.87` → `87%`)
 - A **100-character preview** of the markdown content
@@ -313,14 +315,14 @@ Clicking a result calls `onSelect(r._id)`, which sets the `activeNoteId` in the 
 
 ## Summary
 
-| Layer | File | What happens |
-|-------|------|-------------|
-| Shortcut | `App.tsx:13` | `Cmd+Shift+K` → `openCommandPalette("semantic")` |
-| Zustand | `stores/appStore.ts:50` | Atomically sets `open: true, mode: "semantic"` |
-| Palette | `components/search/CommandPalette.tsx:57` | 200ms debounce, calls `semanticSearch(query)` |
-| Hook | `hooks/useSearch.ts:42` | `api.semantic.search(query)` |
-| API Client | `api/client.ts:96` | `GET /api/semantic/search?q=...` |
-| Route | `routes/semantic.ts:7` | Passes query to `semanticService.semanticSearch()` |
-| Embedding | `services/embeddings.ts:33` | OpenAI `text-embedding-3-small` → 1536-dim vector |
-| Vector Search | `services/semantic.service.ts:13` | `$vectorSearch` aggregation: cosine, 100 candidates, top 10 |
-| Results | `components/search/SearchResults.tsx:56` | Score displayed as percentage, 100-char preview |
+| Layer         | File                                      | What happens                                                |
+| ------------- | ----------------------------------------- | ----------------------------------------------------------- |
+| Shortcut      | `App.tsx:13`                              | `Cmd+Shift+K` → `openCommandPalette("semantic")`            |
+| Zustand       | `stores/appStore.ts:50`                   | Atomically sets `open: true, mode: "semantic"`              |
+| Palette       | `components/search/CommandPalette.tsx:57` | 200ms debounce, calls `semanticSearch(query)`               |
+| Hook          | `hooks/useSearch.ts:42`                   | `api.semantic.search(query)`                                |
+| API Client    | `api/client.ts:96`                        | `GET /api/semantic/search?q=...`                            |
+| Route         | `routes/semantic.ts:7`                    | Passes query to `semanticService.semanticSearch()`          |
+| Embedding     | `services/embeddings.ts:33`               | OpenAI `text-embedding-3-small` → 1536-dim vector           |
+| Vector Search | `services/semantic.service.ts:13`         | `$vectorSearch` aggregation: cosine, 100 candidates, top 10 |
+| Results       | `components/search/SearchResults.tsx:56`  | Score displayed as percentage, 100-char preview             |
