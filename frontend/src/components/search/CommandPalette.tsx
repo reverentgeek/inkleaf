@@ -76,17 +76,17 @@ export default function CommandPalette({
     <div className="fixed inset-0 z-50 flex items-start justify-center pt-[20vh]">
       <div className="fixed inset-0 bg-black/60" onClick={onClose} />
       <Command
-        className="relative w-full max-w-xl bg-slate-900 border border-slate-700 rounded-xl shadow-2xl overflow-hidden"
+        className="relative w-full max-w-xl bg-ink-bg-primary border border-ink-border-strong rounded-xl shadow-2xl overflow-hidden"
         shouldFilter={false}
       >
         {/* Mode tabs */}
-        <div className="flex border-b border-slate-800">
+        <div className="flex border-b border-ink-border">
           <button
             onClick={() => setMode("text")}
             className={`flex items-center gap-1.5 px-4 py-2 text-sm transition-colors ${
               mode === "text"
-                ? "text-emerald-400 border-b-2 border-emerald-400"
-                : "text-slate-500 hover:text-slate-300"
+                ? "text-ink-accent-light border-b-2 border-ink-accent-light"
+                : "text-ink-text-faint hover:text-ink-text-tertiary"
             }`}
           >
             <Search size={14} />
@@ -96,8 +96,8 @@ export default function CommandPalette({
             onClick={() => setMode("semantic")}
             className={`flex items-center gap-1.5 px-4 py-2 text-sm transition-colors ${
               mode === "semantic"
-                ? "text-emerald-400 border-b-2 border-emerald-400"
-                : "text-slate-500 hover:text-slate-300"
+                ? "text-ink-accent-light border-b-2 border-ink-accent-light"
+                : "text-ink-text-faint hover:text-ink-text-tertiary"
             }`}
           >
             <Sparkles size={14} />
@@ -106,8 +106,8 @@ export default function CommandPalette({
         </div>
 
         {/* Search input */}
-        <div className="flex items-center px-4 border-b border-slate-800">
-          <Search size={16} className="text-slate-500" />
+        <div className="flex items-center px-4 border-b border-ink-border">
+          <Search size={16} className="text-ink-text-faint" />
           <Command.Input
             autoFocus
             value={query}
@@ -117,22 +117,22 @@ export default function CommandPalette({
                 ? "Search notes..."
                 : "Describe what you're looking for..."
             }
-            className="flex-1 px-3 py-3 bg-transparent text-sm text-slate-200 outline-none placeholder:text-slate-600"
+            className="flex-1 px-3 py-3 bg-transparent text-sm text-ink-text-secondary outline-none placeholder:text-ink-text-placeholder"
           />
           {isSearching && (
-            <div className="w-4 h-4 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin" />
+            <div className="w-4 h-4 border-2 border-ink-accent-light border-t-transparent rounded-full animate-spin" />
           )}
         </div>
 
         {/* Autocomplete suggestions (text mode) */}
         {mode === "text" && autocompleteResults.length > 0 && (
-          <div className="px-2 py-1 border-b border-slate-800">
+          <div className="px-2 py-1 border-b border-ink-border">
             <div className="flex flex-wrap gap-1">
               {autocompleteResults.map((r) => (
                 <button
                   key={r._id}
                   onClick={() => handleSelect(r._id)}
-                  className="flex items-center gap-1 text-xs px-2 py-1 rounded bg-slate-800 text-slate-400 hover:text-slate-200 hover:bg-slate-700 transition-colors"
+                  className="flex items-center gap-1 text-xs px-2 py-1 rounded bg-ink-bg-secondary text-ink-text-muted hover:text-ink-text-secondary hover:bg-ink-bg-elevated transition-colors"
                 >
                   <FileText size={10} />
                   {r.title}
@@ -145,7 +145,7 @@ export default function CommandPalette({
         {/* Results */}
         <Command.List className="max-h-80 overflow-y-auto p-2">
           {query && !isSearching && results.length === 0 && (
-            <Command.Empty className="p-4 text-sm text-slate-500 text-center">
+            <Command.Empty className="p-4 text-sm text-ink-text-faint text-center">
               No results found
             </Command.Empty>
           )}

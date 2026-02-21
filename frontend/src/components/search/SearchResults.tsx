@@ -15,12 +15,12 @@ function renderHighlights(
 
   const first = highlights[0];
   return (
-    <p className="text-xs text-slate-400 mt-1">
+    <p className="text-xs text-ink-text-muted mt-1">
       {first.texts.map((t, i) =>
         t.type === "hit" ? (
           <mark
             key={i}
-            className="bg-emerald-500/30 text-emerald-300 px-0.5 rounded"
+            className="bg-ink-accent/30 text-ink-accent-lighter px-0.5 rounded"
           >
             {t.value}
           </mark>
@@ -45,14 +45,14 @@ export default function SearchResults({
         <button
           key={r._id}
           onClick={() => onSelect(r._id)}
-          className="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-800/60 transition-colors"
+          className="w-full text-left px-3 py-2 rounded-lg hover:bg-ink-bg-secondary/60 transition-colors"
         >
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2 min-w-0">
-              <FileText size={12} className="text-slate-500 flex-shrink-0" />
-              <span className="text-sm text-slate-200 truncate">{r.title}</span>
+              <FileText size={12} className="text-ink-text-faint flex-shrink-0" />
+              <span className="text-sm text-ink-text-secondary truncate">{r.title}</span>
             </div>
-            <span className="text-xs text-slate-500 flex-shrink-0">
+            <span className="text-xs text-ink-text-faint flex-shrink-0">
               {mode === "text"
                 ? `${r.score.toFixed(2)}`
                 : `${(r.score * 100).toFixed(0)}%`}
@@ -62,7 +62,7 @@ export default function SearchResults({
             "highlights" in r &&
             renderHighlights((r as SearchResult).highlights)}
           {mode === "semantic" && (
-            <p className="text-xs text-slate-500 mt-1 truncate">
+            <p className="text-xs text-ink-text-faint mt-1 truncate">
               {r.markdown?.slice(0, 100)}
             </p>
           )}

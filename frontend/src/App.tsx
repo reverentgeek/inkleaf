@@ -3,7 +3,16 @@ import Layout from "./components/layout/Layout";
 import { useAppStore } from "./stores/appStore";
 
 export default function App() {
-  const { setCommandPaletteOpen, openCommandPalette, toggleVaultMode, setViewMode } = useAppStore();
+  const { setCommandPaletteOpen, openCommandPalette, toggleVaultMode, setViewMode, theme, toggleTheme } = useAppStore();
+
+  // Sync theme class to <html>
+  useEffect(() => {
+    if (theme === "dark") {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+  }, [theme]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -27,6 +36,14 @@ export default function App() {
       if (isMod && e.shiftKey && e.key.toLowerCase() === "v") {
         e.preventDefault();
         toggleVaultMode();
+        return;
+      }
+
+      // Cmd+Shift+T: Toggle theme
+      if (isMod && e.shiftKey && e.key.toLowerCase() === "t") {
+        e.preventDefault();
+        toggleTheme();
+        return;
       }
 
       // Escape: Close command palette
@@ -37,7 +54,7 @@ export default function App() {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [setCommandPaletteOpen, openCommandPalette, toggleVaultMode, setViewMode]);
+  }, [setCommandPaletteOpen, openCommandPalette, toggleVaultMode, setViewMode, toggleTheme]);
 
   return <Layout />;
 }

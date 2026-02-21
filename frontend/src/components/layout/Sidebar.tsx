@@ -32,18 +32,18 @@ export default function Sidebar({
   onSetNotebook,
 }: SidebarProps) {
   return (
-    <aside className="w-72 h-full flex flex-col border-r border-slate-800 bg-slate-900">
+    <aside className="w-72 h-full flex flex-col border-r border-ink-border bg-ink-bg-primary">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-ink-border">
         <div className="flex items-center gap-2">
           <InkleafLogo size={16} />
-          <span className="text-sm font-semibold text-slate-200">
+          <span className="text-sm font-semibold text-ink-text-secondary">
             {isVaultMode ? "Vault" : "Notes"}
           </span>
         </div>
         <button
           onClick={onCreateNote}
-          className="p-1.5 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition-colors"
+          className="p-1.5 rounded-lg hover:bg-ink-bg-secondary text-ink-text-muted hover:text-ink-text-secondary transition-colors"
           title="New Note (Cmd+N)"
         >
           <Plus size={16} />
@@ -52,14 +52,14 @@ export default function Sidebar({
 
       {/* Notebook filter (not shown in vault mode) */}
       {!isVaultMode && (
-        <div className="px-3 py-2 border-b border-slate-800">
+        <div className="px-3 py-2 border-b border-ink-border">
           <div className="relative">
             <select
               value={activeNotebook || ""}
               onChange={(e) =>
                 onSetNotebook(e.target.value || null)
               }
-              className="w-full appearance-none bg-slate-800 text-sm text-slate-300 rounded-lg px-3 py-1.5 pr-8 border border-slate-700 focus:border-emerald-500/50 focus:outline-none"
+              className="w-full appearance-none bg-ink-bg-secondary text-sm text-ink-text-tertiary rounded-lg px-3 py-1.5 pr-8 border border-ink-border-strong focus:border-ink-accent/50 focus:outline-none"
             >
               <option value="">All Notebooks</option>
               {NOTEBOOKS.map((nb) => (
@@ -70,7 +70,7 @@ export default function Sidebar({
             </select>
             <ChevronDown
               size={14}
-              className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none"
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-ink-text-faint pointer-events-none"
             />
           </div>
         </div>
@@ -97,7 +97,7 @@ export default function Sidebar({
       </div>
 
       {/* Vault Toggle */}
-      <div className="p-3 border-t border-slate-800">
+      <div className="p-3 border-t border-ink-border">
         <VaultToggle isActive={isVaultMode} onToggle={onToggleVault} />
       </div>
     </aside>

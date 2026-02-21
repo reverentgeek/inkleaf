@@ -14,8 +14,8 @@ export default function InkleafLogo({ size = 20, className = "" }: InkleafLogoPr
     >
       <defs>
         <linearGradient id="inkleaf-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#6ee7b7" />
-          <stop offset="100%" stopColor="#10b981" />
+          <stop offset="0%" style={{ stopColor: 'var(--ink-logo-start)' }} />
+          <stop offset="100%" style={{ stopColor: 'var(--ink-logo-end)' }} />
         </linearGradient>
       </defs>
       <g>

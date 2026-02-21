@@ -101,6 +101,7 @@ _id, title, markdown (encrypted via CSFLE Random), tags[], createdAt, updatedAt
 | Cmd+K | Open command palette (text search) |
 | Cmd+Shift+K | Open command palette (semantic search) |
 | Cmd+Shift+V | Toggle vault mode |
+| Cmd+Shift+T | Toggle light/dark theme |
 | Escape | Close command palette |
 
 ## Coding Patterns & Gotchas
@@ -125,7 +126,8 @@ _id, title, markdown (encrypted via CSFLE Random), tags[], createdAt, updatedAt
 
 ### Frontend
 - Tailwind v4: CSS-first config via `@import "tailwindcss"` in globals.css, uses `@tailwindcss/vite` plugin (no tailwind.config.js or postcss.config.js)
-- Dark theme: slate-900 bg, emerald-500 accent, amber-500 vault accent
+- **Theming**: Light/dark via CSS custom properties (`--ink-*`) registered as Tailwind colors (`ink-*`) in `@theme`. Theme persists to `localStorage("inkleaf-theme")`, defaults to dark. Toggle via header button or `Cmd+Shift+T`. Anti-FOUC script in `index.html` applies `.dark` class before React loads.
+- Color tokens: `ink-bg-*`, `ink-text-*`, `ink-accent-*`, `ink-vault-*`, `ink-border-*` — defined in `:root` (light) and `.dark` (dark) blocks in globals.css
 - Tauri v2 CSP must include `connect-src http://localhost:3001` for backend API access
 - `useSearch` hook: all returned functions must be wrapped in `useCallback` to prevent infinite re-render loops in consumers
 

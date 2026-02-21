@@ -42,18 +42,18 @@ export default function RelatedNotes({ noteId, onSelect }: RelatedNotesProps) {
 
   return (
     <div className="h-full flex flex-col">
-      <div className="flex items-center gap-2 px-4 py-3 border-b border-slate-800">
-        <Sparkles size={14} className="text-emerald-400" />
-        <span className="text-sm font-medium text-slate-300">
+      <div className="flex items-center gap-2 px-4 py-3 border-b border-ink-border">
+        <Sparkles size={14} className="text-ink-accent-light" />
+        <span className="text-sm font-medium text-ink-text-tertiary">
           Related Notes
         </span>
       </div>
       <div className="flex-1 overflow-y-auto p-2">
         {loading && (
-          <div className="p-3 text-xs text-slate-500">Finding related notes...</div>
+          <div className="p-3 text-xs text-ink-text-faint">Finding related notes...</div>
         )}
         {!loading && related.length === 0 && (
-          <div className="p-3 text-xs text-slate-500">
+          <div className="p-3 text-xs text-ink-text-faint">
             {noteId
               ? "No related notes found"
               : "Select a note to see related content"}
@@ -63,15 +63,15 @@ export default function RelatedNotes({ noteId, onSelect }: RelatedNotesProps) {
           <button
             key={r._id}
             onClick={() => onSelect(r._id)}
-            className="w-full text-left p-3 rounded-lg hover:bg-slate-800/50 transition-colors"
+            className="w-full text-left p-3 rounded-lg hover:bg-ink-bg-secondary/50 transition-colors"
           >
             <div className="flex items-center gap-2">
-              <FileText size={12} className="text-slate-500" />
-              <span className="text-sm text-slate-300 truncate">
+              <FileText size={12} className="text-ink-text-faint" />
+              <span className="text-sm text-ink-text-tertiary truncate">
                 {r.title}
               </span>
             </div>
-            <div className="text-xs text-emerald-400 mt-1">
+            <div className="text-xs text-ink-accent-light mt-1">
               {(r.score * 100).toFixed(0)}% similar
             </div>
           </button>

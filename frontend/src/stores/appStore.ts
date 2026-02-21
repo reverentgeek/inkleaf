@@ -1,6 +1,8 @@
 import { create } from "zustand";
 import type { Note, VaultNote } from "../api/client";
 
+type Theme = "light" | "dark";
+
 interface AppState {
   // Notes
   notes: Note[];
@@ -15,6 +17,8 @@ interface AppState {
   toggleVaultMode: () => void;
 
   // UI
+  theme: Theme;
+  toggleTheme: () => void;
   sidebarOpen: boolean;
   setSidebarOpen: (open: boolean) => void;
   commandPaletteOpen: boolean;
@@ -40,6 +44,14 @@ export const useAppStore = create<AppState>((set) => ({
   setVaultNotes: (notes) => set({ vaultNotes: notes }),
   isVaultMode: false,
   toggleVaultMode: () => set((s) => ({ isVaultMode: !s.isVaultMode, activeNoteId: null })),
+
+  theme: (localStorage.getItem("inkleaf-theme") as Theme) || "dark",
+  toggleTheme: () =>
+    set((s) => {
+      const next = s.theme === "dark" ? "light" : "dark";
+      localStorage.setItem("inkleaf-theme", next);
+      return { theme: next };
+    }),
 
   sidebarOpen: true,
   setSidebarOpen: (open) => set({ sidebarOpen: open }),

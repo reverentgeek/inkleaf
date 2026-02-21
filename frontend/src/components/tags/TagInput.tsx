@@ -31,16 +31,16 @@ export default function TagInput({ tags, onChange }: TagInputProps) {
   };
 
   return (
-    <div className="flex flex-wrap items-center gap-1.5 px-3 py-2 bg-slate-800 rounded-lg border border-slate-700 focus-within:border-emerald-500/50">
+    <div className="flex flex-wrap items-center gap-1.5 px-3 py-2 bg-ink-bg-secondary rounded-lg border border-ink-border-strong focus-within:border-ink-accent/50">
       {tags.map((tag) => (
         <span
           key={tag}
-          className="flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300"
+          className="flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-ink-accent/20 text-ink-accent-lighter"
         >
           {tag}
           <button
             onClick={() => removeTag(tag)}
-            className="hover:text-emerald-100"
+            className="hover:text-ink-accent"
           >
             <X size={10} />
           </button>
@@ -52,7 +52,7 @@ export default function TagInput({ tags, onChange }: TagInputProps) {
         onKeyDown={handleKeyDown}
         onBlur={() => input && addTag(input)}
         placeholder={tags.length === 0 ? "Add tags..." : ""}
-        className="flex-1 min-w-[60px] bg-transparent text-sm text-slate-300 outline-none placeholder:text-slate-600"
+        className="flex-1 min-w-[60px] bg-transparent text-sm text-ink-text-tertiary outline-none placeholder:text-ink-text-placeholder"
       />
     </div>
   );

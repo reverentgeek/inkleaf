@@ -42,16 +42,16 @@ export default function NoteCard({
         className={`w-full text-left p-3 rounded-lg border transition-colors group cursor-pointer ${
           isActive
             ? isVault
-              ? "bg-amber-500/10 border-amber-500/30"
-              : "bg-emerald-500/10 border-emerald-500/30"
-            : "bg-transparent border-transparent hover:bg-slate-800/50"
+              ? "bg-ink-vault/10 border-ink-vault/30"
+              : "bg-ink-accent/10 border-ink-accent/30"
+            : "bg-transparent border-transparent hover:bg-ink-bg-secondary/50"
         }`}
       >
         <div className="flex items-start justify-between gap-2">
           <div className="flex items-center gap-2 min-w-0">
             <FileText
               size={14}
-              className={`flex-shrink-0 ${isVault ? "text-amber-500" : "text-slate-500"}`}
+              className={`flex-shrink-0 ${isVault ? "text-ink-vault" : "text-ink-text-faint"}`}
             />
             <span className="font-medium text-sm truncate">
               {note.title || "Untitled"}
@@ -59,18 +59,18 @@ export default function NoteCard({
           </div>
           <button
             onClick={handleDeleteClick}
-            className="opacity-0 group-hover:opacity-100 p-1 hover:text-red-400 transition-opacity"
+            className="opacity-0 group-hover:opacity-100 p-1 hover:text-ink-danger-light transition-opacity"
           >
             <Trash2 size={12} />
           </button>
         </div>
-        <p className="text-xs text-slate-500 mt-1 truncate">{preview}</p>
+        <p className="text-xs text-ink-text-faint mt-1 truncate">{preview}</p>
         <div className="flex items-center gap-2 mt-2">
-          <span className="text-xs text-slate-600">{date}</span>
+          <span className="text-xs text-ink-text-placeholder">{date}</span>
           {note.tags?.slice(0, 3).map((tag) => (
             <span
               key={tag}
-              className="text-xs px-1.5 py-0.5 rounded bg-slate-800 text-slate-400"
+              className="text-xs px-1.5 py-0.5 rounded bg-ink-bg-secondary text-ink-text-muted"
             >
               {tag}
             </span>

@@ -18,7 +18,7 @@ export default function NoteList({
 }: NoteListProps) {
   if (notes.length === 0) {
     return (
-      <div className="p-4 text-center text-slate-500 text-sm">
+      <div className="p-4 text-center text-ink-text-faint text-sm">
         No notes yet. Create one to get started.
       </div>
     );

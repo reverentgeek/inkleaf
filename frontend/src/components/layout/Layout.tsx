@@ -130,7 +130,7 @@ export default function Layout() {
   );
 
   return (
-    <div className="flex h-screen overflow-hidden bg-slate-900">
+    <div className="flex h-screen overflow-hidden bg-ink-bg-primary">
       {/* Sidebar */}
       {sidebarOpen && (
         <Sidebar
@@ -167,7 +167,7 @@ export default function Layout() {
                   value={currentNote.title}
                   onChange={handleTitleChange}
                   placeholder="Note title"
-                  className="w-full bg-transparent text-2xl font-bold text-slate-100 outline-none placeholder:text-slate-600"
+                  className="w-full bg-transparent text-2xl font-bold text-ink-text-primary outline-none placeholder:text-ink-text-placeholder"
                 />
               </div>
 
@@ -185,8 +185,8 @@ export default function Layout() {
                   onClick={() => setViewMode("edit")}
                   className={`flex items-center gap-1 px-2 py-1 rounded text-xs transition-colors ${
                     viewMode === "edit"
-                      ? "bg-slate-800 text-slate-200"
-                      : "text-slate-500 hover:text-slate-300"
+                      ? "bg-ink-bg-secondary text-ink-text-secondary"
+                      : "text-ink-text-faint hover:text-ink-text-tertiary"
                   }`}
                 >
                   <Edit3 size={12} />
@@ -196,8 +196,8 @@ export default function Layout() {
                   onClick={() => setViewMode("preview")}
                   className={`flex items-center gap-1 px-2 py-1 rounded text-xs transition-colors ${
                     viewMode === "preview"
-                      ? "bg-slate-800 text-slate-200"
-                      : "text-slate-500 hover:text-slate-300"
+                      ? "bg-ink-bg-secondary text-ink-text-secondary"
+                      : "text-ink-text-faint hover:text-ink-text-tertiary"
                   }`}
                 >
                   <Eye size={12} />
@@ -205,10 +205,10 @@ export default function Layout() {
                 </button>
                 {viewMode === "edit" && (
                   <>
-                    <div className="w-px h-4 bg-slate-700 mx-1" />
+                    <div className="w-px h-4 bg-ink-border-strong mx-1" />
                     <button
                       onClick={handleFormat}
-                      className="flex items-center gap-1 px-2 py-1 rounded text-xs text-slate-500 hover:text-slate-300 hover:bg-slate-800 transition-colors"
+                      className="flex items-center gap-1 px-2 py-1 rounded text-xs text-ink-text-faint hover:text-ink-text-tertiary hover:bg-ink-bg-secondary transition-colors"
                       title="Format (Cmd+Shift+F)"
                     >
                       <WrapText size={12} />
@@ -235,7 +235,7 @@ export default function Layout() {
 
             {/* Related notes panel (not in vault mode) */}
             {!isVaultMode && (
-              <div className="w-64 border-l border-slate-800 hidden lg:block">
+              <div className="w-64 border-l border-ink-border hidden lg:block">
                 <RelatedNotes
                   noteId={activeNoteId}
                   onSelect={setActiveNoteId}
@@ -250,15 +250,15 @@ export default function Layout() {
               <div className="mb-4 flex justify-center">
                 {isVaultMode ? <span className="text-6xl">{"\uD83D\uDD12"}</span> : <InkleafLogo size={64} />}
               </div>
-              <h2 className="text-lg font-medium text-slate-400 mb-2">
+              <h2 className="text-lg font-medium text-ink-text-muted mb-2">
                 {isVaultMode ? "Vault Mode" : "No note selected"}
               </h2>
-              <p className="text-sm text-slate-500">
+              <p className="text-sm text-ink-text-faint">
                 Select a note or create a new one to get started
               </p>
               <button
                 onClick={handleCreateNote}
-                className="mt-4 px-4 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white text-sm transition-colors"
+                className="mt-4 px-4 py-2 rounded-lg bg-ink-accent hover:bg-ink-accent-hover text-white text-sm transition-colors"
               >
                 Create Note
               </button>

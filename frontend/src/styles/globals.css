@@ -2,19 +2,121 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
-/* Override slate palette with green-tinted darks */
+/* Light mode (default) */
+:root {
+  --ink-bg-primary: #ffffff;
+  --ink-bg-secondary: #f1f5f9;
+  --ink-bg-elevated: #e2e8f0;
+  --ink-bg-hover: #cbd5e1;
+
+  --ink-text-primary: #0f172a;
+  --ink-text-secondary: #1e293b;
+  --ink-text-tertiary: #334155;
+  --ink-text-muted: #64748b;
+  --ink-text-faint: #94a3b8;
+  --ink-text-placeholder: #94a3b8;
+
+  --ink-accent: #059669;
+  --ink-accent-light: #10b981;
+  --ink-accent-lighter: #047857;
+  --ink-accent-hover: #047857;
+
+  --ink-vault: #d97706;
+  --ink-vault-light: #b45309;
+
+  --ink-danger: #dc2626;
+  --ink-danger-light: #ef4444;
+  --ink-danger-hover: #b91c1c;
+
+  --ink-border: #e2e8f0;
+  --ink-border-strong: #cbd5e1;
+
+  --ink-code-bg: #f1f5f9;
+  --ink-pre-bg: #f6f8fa;
+  --ink-pre-border: #e2e8f0;
+  --ink-blockquote-bg: rgba(241, 245, 249, 0.5);
+  --ink-table-header-bg: rgba(241, 245, 249, 0.5);
+  --ink-table-row-hover: rgba(241, 245, 249, 0.3);
+  --ink-marker: #94a3b8;
+
+  --ink-logo-start: #10b981;
+  --ink-logo-end: #059669;
+}
+
+/* Dark mode */
+.dark {
+  --ink-bg-primary: #0E252B;
+  --ink-bg-secondary: #163232;
+  --ink-bg-elevated: #1E3F3B;
+  --ink-bg-hover: #2D5A50;
+
+  --ink-text-primary: #f1f5f9;
+  --ink-text-secondary: #e2e8f0;
+  --ink-text-tertiary: #cbd5e1;
+  --ink-text-muted: #94a3b8;
+  --ink-text-faint: #4A7C6F;
+  --ink-text-placeholder: #2D5A50;
+
+  --ink-accent: #10b981;
+  --ink-accent-light: #34d399;
+  --ink-accent-lighter: #6ee7b7;
+  --ink-accent-hover: #059669;
+
+  --ink-vault: #f59e0b;
+  --ink-vault-light: #fbbf24;
+
+  --ink-danger: #ef4444;
+  --ink-danger-light: #f87171;
+  --ink-danger-hover: #dc2626;
+
+  --ink-border: #163232;
+  --ink-border-strong: #1E3F3B;
+
+  --ink-code-bg: #163232;
+  --ink-pre-bg: #22272e;
+  --ink-pre-border: #1E3F3B;
+  --ink-blockquote-bg: rgba(22, 50, 50, 0.5);
+  --ink-table-header-bg: rgba(22, 50, 50, 0.5);
+  --ink-table-row-hover: rgba(22, 50, 50, 0.3);
+  --ink-marker: #4A7C6F;
+
+  --ink-logo-start: #6ee7b7;
+  --ink-logo-end: #10b981;
+}
+
+/* Register CSS variables as Tailwind color utilities */
 @theme {
-  --color-slate-950: #060F12;
-  --color-slate-900: #0E252B;
-  --color-slate-800: #163232;
-  --color-slate-700: #1E3F3B;
-  --color-slate-600: #2D5A50;
-  --color-slate-500: #4A7C6F;
+  --color-ink-bg-primary: var(--ink-bg-primary);
+  --color-ink-bg-secondary: var(--ink-bg-secondary);
+  --color-ink-bg-elevated: var(--ink-bg-elevated);
+  --color-ink-bg-hover: var(--ink-bg-hover);
+
+  --color-ink-text-primary: var(--ink-text-primary);
+  --color-ink-text-secondary: var(--ink-text-secondary);
+  --color-ink-text-tertiary: var(--ink-text-tertiary);
+  --color-ink-text-muted: var(--ink-text-muted);
+  --color-ink-text-faint: var(--ink-text-faint);
+  --color-ink-text-placeholder: var(--ink-text-placeholder);
+
+  --color-ink-accent: var(--ink-accent);
+  --color-ink-accent-light: var(--ink-accent-light);
+  --color-ink-accent-lighter: var(--ink-accent-lighter);
+  --color-ink-accent-hover: var(--ink-accent-hover);
+
+  --color-ink-vault: var(--ink-vault);
+  --color-ink-vault-light: var(--ink-vault-light);
+
+  --color-ink-danger: var(--ink-danger);
+  --color-ink-danger-light: var(--ink-danger-light);
+  --color-ink-danger-hover: var(--ink-danger-hover);
+
+  --color-ink-border: var(--ink-border);
+  --color-ink-border-strong: var(--ink-border-strong);
 }
 
 @layer base {
   body {
-    @apply bg-slate-900 text-slate-100 antialiased;
+    @apply bg-ink-bg-primary text-ink-text-primary antialiased;
   }
 
   ::-webkit-scrollbar {
@@ -22,20 +124,20 @@
   }
 
   ::-webkit-scrollbar-track {
-    @apply bg-slate-900;
+    @apply bg-ink-bg-primary;
   }
 
   ::-webkit-scrollbar-thumb {
-    @apply bg-slate-700 rounded-full;
+    @apply bg-ink-bg-elevated rounded-full;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    @apply bg-slate-600;
+    @apply bg-ink-bg-hover;
   }
 }
 
 @layer components {
   .vault-active {
-    @apply border-amber-500/30;
+    @apply border-ink-vault/30;
   }
 }

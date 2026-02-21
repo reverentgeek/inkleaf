@@ -5,6 +5,7 @@ import { oneDark } from "@codemirror/theme-one-dark";
 import { EditorView } from "@codemirror/view";
 import * as prettier from "prettier/standalone";
 import * as markdownPlugin from "prettier/plugins/markdown";
+import { useAppStore } from "../../stores/appStore";
 
 interface MarkdownEditorProps {
   value: string;
@@ -25,7 +26,7 @@ const baseTheme = EditorView.theme({
     padding: "16px",
   },
   ".cm-content": {
-    caretColor: "#818cf8",
+    caretColor: "var(--ink-accent-light)",
   },
   "&.cm-focused": {
     outline: "none",
@@ -34,6 +35,7 @@ const baseTheme = EditorView.theme({
 
 const MarkdownEditor = forwardRef<MarkdownEditorHandle, MarkdownEditorProps>(
   function MarkdownEditor({ value, onChange }, ref) {
+    const storeTheme = useAppStore((s) => s.theme);
     // Capture value at mount only. The component remounts via key={noteId}
     // when switching notes, so this always starts with the correct content.
     // Within a note session, the editor is the source of truth — parent
@@ -149,7 +151,7 @@ const MarkdownEditor = forwardRef<MarkdownEditorHandle, MarkdownEditorProps>(
         value={initialValue}
         onChange={handleChange}
         extensions={[markdown(), baseTheme, EditorView.lineWrapping]}
-        theme={oneDark}
+        theme={storeTheme === "dark" ? oneDark : "light"}
         className="h-full"
         basicSetup={{
           lineNumbers: false,
