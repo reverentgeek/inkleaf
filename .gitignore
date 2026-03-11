@@ -5,3 +5,4 @@ target/
 master-key.bin
 *.bin
 .DS_Store
+.playwright-mcp/

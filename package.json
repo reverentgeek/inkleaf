@@ -6,6 +6,8 @@
 		"dev": "concurrently -n backend,frontend -c blue,green \"pnpm --filter backend dev\" \"pnpm --filter frontend dev\"",
 		"dev:tauri": "concurrently -n backend,tauri -c blue,green \"pnpm --filter backend dev\" \"pnpm --filter frontend tauri\"",
 		"build": "pnpm --filter backend build && pnpm --filter frontend build",
+		"build:app": "pnpm dlx @tauri-apps/cli build --bundles app",
+		"build:dmg": "pnpm dlx @tauri-apps/cli build --bundles dmg",
 		"seed": "pnpm --filter backend seed",
 		"generate-master-key": "pnpm --filter backend generate-master-key",
 		"create-data-key": "pnpm --filter backend create-data-key",

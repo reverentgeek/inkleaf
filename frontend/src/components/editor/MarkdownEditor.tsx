@@ -3,9 +3,41 @@ import CodeMirror, { type ReactCodeMirrorRef } from "@uiw/react-codemirror";
 import { markdown } from "@codemirror/lang-markdown";
 import { oneDark } from "@codemirror/theme-one-dark";
 import { EditorView } from "@codemirror/view";
+import { invoke } from "@tauri-apps/api/core";
 import * as prettier from "prettier/standalone";
 import * as markdownPlugin from "prettier/plugins/markdown";
 import { useAppStore } from "../../stores/appStore";
+
+const urlPattern = /https?:\/\/[^\s)>\]]+/g;
+
+const cmdClickOpen = EditorView.domEventHandlers({
+  click(event, view) {
+    if (!event.metaKey) return false;
+
+    const pos = view.posAtCoords({ x: event.clientX, y: event.clientY });
+    if (pos === null) return false;
+
+    const line = view.state.doc.lineAt(pos);
+    const lineText = line.text;
+    const colOffset = pos - line.from;
+
+    let match: RegExpExecArray | null;
+    urlPattern.lastIndex = 0;
+    while ((match = urlPattern.exec(lineText)) !== null) {
+      const start = match.index;
+      const end = start + match[0].length;
+      if (colOffset >= start && colOffset <= end) {
+        event.preventDefault();
+        invoke("open_external", { url: match[0] }).catch(() => {
+          window.open(match![0], "_blank", "noopener,noreferrer");
+        });
+        return true;
+      }
+    }
+
+    return false;
+  },
+});
 
 interface MarkdownEditorProps {
   value: string;
@@ -150,7 +182,7 @@ const MarkdownEditor = forwardRef<MarkdownEditorHandle, MarkdownEditorProps>(
         ref={editorRef}
         value={initialValue}
         onChange={handleChange}
-        extensions={[markdown(), baseTheme, EditorView.lineWrapping]}
+        extensions={[markdown(), baseTheme, EditorView.lineWrapping, cmdClickOpen]}
         theme={storeTheme === "dark" ? oneDark : "light"}
         className="h-full"
         basicSetup={{
