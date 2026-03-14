@@ -4,7 +4,7 @@
 	"private": true,
 	"scripts": {
 		"dev": "concurrently -n backend,frontend -c blue,green \"pnpm --filter backend dev\" \"pnpm --filter frontend dev\"",
-		"dev:tauri": "concurrently -n backend,tauri -c blue,green \"pnpm --filter backend dev\" \"pnpm --filter frontend tauri\"",
+		"dev:tauri": "concurrently --kill-others -n backend,tauri -c blue,green \"pnpm --filter backend dev\" \"pnpm --filter frontend tauri\"",
 		"build": "pnpm --filter backend build && pnpm --filter frontend build",
 		"build:app": "pnpm dlx @tauri-apps/cli build --bundles app",
 		"build:dmg": "pnpm dlx @tauri-apps/cli build --bundles dmg",
