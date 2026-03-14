@@ -1,35 +1,40 @@
-import { Plus, ChevronDown } from "lucide-react";
+import { Plus } from "lucide-react";
 import InkleafLogo from "../InkleafLogo";
 import NoteList from "../notes/NoteList";
 import VaultToggle from "../vault/VaultToggle";
+import TagTree from "../tags/TagTree";
 import type { Note, VaultNote } from "../../api/client";
-
-const NOTEBOOKS = ["default", "work", "personal", "learning"];
 
 interface SidebarProps {
   notes: Note[];
+  filteredNotes: Note[];
   vaultNotes: VaultNote[];
   activeNoteId: string | null;
   isVaultMode: boolean;
-  activeNotebook: string | null;
+  activeTag: string | null;
+  expandedTagPaths: string[];
   onSelectNote: (id: string) => void;
   onDeleteNote: (id: string) => void;
   onCreateNote: () => void;
   onToggleVault: () => void;
-  onSetNotebook: (notebook: string | null) => void;
+  onSelectTag: (tag: string | null) => void;
+  onToggleTagExpanded: (path: string) => void;
 }
 
 export default function Sidebar({
   notes,
+  filteredNotes,
   vaultNotes,
   activeNoteId,
   isVaultMode,
-  activeNotebook,
+  activeTag,
+  expandedTagPaths,
   onSelectNote,
   onDeleteNote,
   onCreateNote,
   onToggleVault,
-  onSetNotebook,
+  onSelectTag,
+  onToggleTagExpanded,
 }: SidebarProps) {
   return (
     <aside className="w-72 h-full flex flex-col border-r border-ink-border bg-ink-bg-primary">
@@ -50,29 +55,16 @@ export default function Sidebar({
         </button>
       </div>
 
-      {/* Notebook filter (not shown in vault mode) */}
+      {/* Tag tree (not shown in vault mode) */}
       {!isVaultMode && (
-        <div className="px-3 py-2 border-b border-ink-border">
-          <div className="relative">
-            <select
-              value={activeNotebook || ""}
-              onChange={(e) =>
-                onSetNotebook(e.target.value || null)
-              }
-              className="w-full appearance-none bg-ink-bg-secondary text-sm text-ink-text-tertiary rounded-lg px-3 py-1.5 pr-8 border border-ink-border-strong focus:border-ink-accent/50 focus:outline-none"
-            >
-              <option value="">All Notebooks</option>
-              {NOTEBOOKS.map((nb) => (
-                <option key={nb} value={nb}>
-                  {nb.charAt(0).toUpperCase() + nb.slice(1)}
-                </option>
-              ))}
-            </select>
-            <ChevronDown
-              size={14}
-              className="absolute right-2 top-1/2 -translate-y-1/2 text-ink-text-faint pointer-events-none"
-            />
-          </div>
+        <div className="max-h-52 overflow-y-auto border-b border-ink-border">
+          <TagTree
+            notes={notes}
+            activeTag={activeTag}
+            expandedPaths={expandedTagPaths}
+            onSelectTag={onSelectTag}
+            onToggleExpand={onToggleTagExpanded}
+          />
         </div>
       )}
 
@@ -88,7 +80,7 @@ export default function Sidebar({
           />
         ) : (
           <NoteList
-            notes={notes}
+            notes={filteredNotes}
             activeNoteId={activeNoteId}
             onSelect={onSelectNote}
             onDelete={onDeleteNote}

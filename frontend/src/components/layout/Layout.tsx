@@ -22,8 +22,10 @@ export default function Layout() {
     setSidebarOpen,
     commandPaletteOpen,
     setCommandPaletteOpen,
-    activeNotebook,
-    setActiveNotebook,
+    activeTag,
+    setActiveTag,
+    expandedTagPaths,
+    toggleTagExpanded,
     activeNoteId,
     setActiveNoteId,
     viewMode,
@@ -32,6 +34,7 @@ export default function Layout() {
 
   const {
     notes,
+    filteredNotes,
     activeNote,
     createNote,
     updateNote,
@@ -135,15 +138,18 @@ export default function Layout() {
       {sidebarOpen && (
         <Sidebar
           notes={notes}
+          filteredNotes={filteredNotes}
           vaultNotes={vaultNotes}
           activeNoteId={activeNoteId}
           isVaultMode={isVaultMode}
-          activeNotebook={activeNotebook}
+          activeTag={activeTag}
+          expandedTagPaths={expandedTagPaths}
           onSelectNote={setActiveNoteId}
           onDeleteNote={handleDeleteNote}
           onCreateNote={handleCreateNote}
           onToggleVault={toggleVaultMode}
-          onSetNotebook={setActiveNotebook}
+          onSelectTag={setActiveTag}
+          onToggleTagExpanded={toggleTagExpanded}
         />
       )}
 

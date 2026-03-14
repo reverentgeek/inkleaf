@@ -29,9 +29,11 @@ interface AppState {
   viewMode: "edit" | "preview";
   setViewMode: (mode: "edit" | "preview") => void;
 
-  // Notebooks
-  activeNotebook: string | null;
-  setActiveNotebook: (notebook: string | null) => void;
+  // Tag navigation
+  activeTag: string | null;
+  setActiveTag: (tag: string | null) => void;
+  expandedTagPaths: string[];
+  toggleTagExpanded: (path: string) => void;
 }
 
 export const useAppStore = create<AppState>((set) => ({
@@ -64,6 +66,15 @@ export const useAppStore = create<AppState>((set) => ({
   viewMode: "edit",
   setViewMode: (mode) => set({ viewMode: mode }),
 
-  activeNotebook: null,
-  setActiveNotebook: (notebook) => set({ activeNotebook: notebook }),
+  activeTag: null,
+  setActiveTag: (tag) => set({ activeTag: tag, activeNoteId: null }),
+  expandedTagPaths: JSON.parse(localStorage.getItem("inkleaf-expanded-tags") || "[]"),
+  toggleTagExpanded: (path) =>
+    set((s) => {
+      const next = s.expandedTagPaths.includes(path)
+        ? s.expandedTagPaths.filter((p) => p !== path)
+        : [...s.expandedTagPaths, path];
+      localStorage.setItem("inkleaf-expanded-tags", JSON.stringify(next));
+      return { expandedTagPaths: next };
+    }),
 }));

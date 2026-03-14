@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import { api } from "../api/client";
 import { useAppStore } from "../stores/appStore";
 import type { Note } from "../api/client";
@@ -9,31 +9,38 @@ export function useNotes() {
     setNotes,
     activeNoteId,
     setActiveNoteId,
-    activeNotebook,
+    activeTag,
     isVaultMode,
   } = useAppStore();
 
   const fetchNotes = useCallback(async () => {
     if (isVaultMode) return;
     try {
-      const data = await api.notes.list(activeNotebook || undefined);
+      const data = await api.notes.list();
       setNotes(data);
     } catch (err) {
       console.error("Failed to fetch notes:", err);
     }
-  }, [activeNotebook, isVaultMode, setNotes]);
+  }, [isVaultMode, setNotes]);
 
   useEffect(() => {
     fetchNotes();
   }, [fetchNotes]);
+
+  const filteredNotes = useMemo(() => {
+    if (!activeTag) return notes;
+    return notes.filter((n) =>
+      n.tags.some((t) => t === activeTag || t.startsWith(activeTag + "/")),
+    );
+  }, [notes, activeTag]);
 
   const createNote = useCallback(async () => {
     try {
       const note = await api.notes.create({
         title: "Untitled",
         markdown: "",
-        tags: [],
-        notebookId: activeNotebook || "default",
+        tags: activeTag ? [activeTag] : [],
+        notebookId: "default",
       });
       setNotes([note, ...notes]);
       setActiveNoteId(note._id);
@@ -41,7 +48,7 @@ export function useNotes() {
     } catch (err) {
       console.error("Failed to create note:", err);
     }
-  }, [notes, activeNotebook, setNotes, setActiveNoteId]);
+  }, [notes, activeTag, setNotes, setActiveNoteId]);
 
   const saveTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
@@ -84,6 +91,7 @@ export function useNotes() {
 
   return {
     notes,
+    filteredNotes,
     activeNote,
     activeNoteId,
     setActiveNoteId,
