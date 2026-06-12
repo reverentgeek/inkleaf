@@ -61,10 +61,26 @@ A desktop Markdown knowledge base built with **Tauri v2**, **React**, and **Mong
 
 - [Node.js](https://nodejs.org/) v22.5+ (the offline store uses the built-in `node:sqlite` module)
 - [pnpm](https://pnpm.io/)
-- [Rust](https://www.rust-lang.org/tools/install) (for Tauri desktop builds)
+- [Rust](https://www.rust-lang.org/tools/install) (for Tauri desktop builds — see below)
 - A [MongoDB Atlas](https://www.mongodb.com/atlas) cluster
 - (Optional) An [OpenAI API key](https://platform.openai.com/) for vector search / embeddings
 - (Optional) The `mongo_crypt_v1` shared library for CSFLE
+
+### Installing Rust
+
+Rust is only needed for the desktop window (`pnpm dev:tauri`) — browser mode (`pnpm dev`) runs without it.
+
+```bash
+# Official installer (rustup)
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+
+# Or with Homebrew on macOS
+brew install rust
+```
+
+> **Note:** `brew install rustup` also exists, but it's keg-only — its binaries aren't added to your PATH, so `rustup-init` won't be found without extra setup. `brew install rust` is the simpler choice. On macOS you'll also need the Xcode Command Line Tools (`xcode-select --install`).
+
+The first `pnpm dev:tauri` run compiles all Tauri crates and takes a few minutes; subsequent builds take seconds.
 
 ## Getting Started
 
