@@ -22,6 +22,7 @@ export function useSyncStatus() {
         lastError: "Backend unreachable",
         pendingPush: 0,
         pendingEmbeddings: 0,
+        revision: 0,
       });
     }
   }, [setSyncStatus]);

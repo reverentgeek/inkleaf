@@ -39,6 +39,7 @@ export interface SyncStatus {
   lastError: string | null;
   pendingPush: number;
   pendingEmbeddings: number;
+  revision: number;
 }
 
 export interface SearchResult {

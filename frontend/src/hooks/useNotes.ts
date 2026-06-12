@@ -13,6 +13,10 @@ export function useNotes() {
     isVaultMode,
   } = useAppStore();
 
+  // Bumps when a background sync pulls remote changes into the local store
+  // (e.g. edits from another device, or the initial pull on a fresh machine).
+  const syncRevision = useAppStore((s) => s.syncStatus?.revision);
+
   const fetchNotes = useCallback(async () => {
     if (isVaultMode) return;
     try {
@@ -25,7 +29,7 @@ export function useNotes() {
 
   useEffect(() => {
     fetchNotes();
-  }, [fetchNotes]);
+  }, [fetchNotes, syncRevision]);
 
   const filteredNotes = useMemo(() => {
     if (!activeTag) return notes;

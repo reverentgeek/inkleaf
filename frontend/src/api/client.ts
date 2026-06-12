@@ -65,6 +65,9 @@ export interface SyncStatus {
   lastError: string | null;
   pendingPush: number;
   pendingEmbeddings: number;
+  // Bumped when a background pull applies remote changes locally —
+  // watched by useNotes to refetch.
+  revision: number;
 }
 
 // Notes CRUD

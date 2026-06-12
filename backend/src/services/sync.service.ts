@@ -19,6 +19,9 @@ let online = false;
 let syncing = false;
 let lastSyncAt: Date | null = null;
 let lastError: string | null = null;
+// Bumped whenever a pull applies remote changes to the local store — the
+// frontend watches this to refetch (e.g. edits arriving from another device).
+let revision = 0;
 let backoffMs = 0;
 let nextAttemptAt = 0;
 let debounceTimer: NodeJS.Timeout | undefined;
@@ -49,6 +52,7 @@ export function getSyncStatus(): SyncStatus {
     lastError,
     pendingPush,
     pendingEmbeddings,
+    revision,
   };
 }
 
@@ -89,7 +93,8 @@ async function tick(force = false): Promise<void> {
     const collection = db.collection<Note>("notes");
     await pushDirtyNotes(collection);
     await pushPendingEmbeddings(collection);
-    await pullRemoteChanges(collection);
+    const applied = await pullRemoteChanges(collection);
+    if (applied > 0) revision++;
 
     lastSyncAt = new Date();
     setSyncState("last_sync_at", String(lastSyncAt.getTime()));
@@ -237,7 +242,8 @@ async function pushPendingEmbeddings(
   }
 }
 
-async function pullRemoteChanges(collection: Collection<Note>): Promise<void> {
+// Returns the number of local rows actually changed (upserts + deletes).
+async function pullRemoteChanges(collection: Collection<Note>): Promise<number> {
   const sqlite = getSqlite();
   const checkpoint = Number(getSyncState("last_pull_at") ?? 0);
 
@@ -283,12 +289,14 @@ async function pullRemoteChanges(collection: Collection<Note>): Promise<void> {
 
   // Clean local rows that vanished remotely were deleted on the server.
   // Dirty rows are skipped — they're local changes awaiting push.
+  let applied = 0;
+
   const deleteStmt = sqlite.prepare(
     "DELETE FROM notes WHERE id = ? AND dirty = 0",
   );
   for (const row of localRows) {
     if (!row.dirty && !row.deleted && !remoteIds.has(row.id)) {
-      deleteStmt.run(row.id);
+      applied += Number(deleteStmt.run(row.id).changes);
     }
   }
 
@@ -315,7 +323,11 @@ async function pullRemoteChanges(collection: Collection<Note>): Promise<void> {
     if (local && local.dirty && local.updated_at >= remoteUpdated) {
       continue; // local change is newer — it wins and pushes next tick
     }
+    if (local && !local.dirty && local.updated_at === remoteUpdated) {
+      continue; // already in sync (typically our own just-pushed doc)
+    }
 
+    applied++;
     upsertStmt.run(
       id,
       doc.title ?? "",
@@ -332,4 +344,6 @@ async function pullRemoteChanges(collection: Collection<Note>): Promise<void> {
   if (maxUpdated > checkpoint) {
     setSyncState("last_pull_at", String(maxUpdated));
   }
+
+  return applied;
 }
