@@ -14,6 +14,7 @@ A desktop Markdown knowledge base built with **Tauri v2**, **React**, and **Mong
 - **Atlas Search** — Full-text search with fuzzy matching, autocomplete, and highlighted results via `$search` aggregation
 - **Vector Search** — Semantic search powered by OpenAI `text-embedding-3-small` embeddings and `$vectorSearch`, plus a related notes panel
 - **CSFLE Vault** — Encrypted notes using Client-Side Field Level Encryption — the server never sees plaintext, with a raw endpoint to prove it
+- **Offline-First** — All notes live in a local SQLite store, so you can view and edit offline; changes sync to Atlas automatically when connected (last-write-wins), with SQLite FTS5 full-text search as the offline fallback
 - **Search Palette** — `Cmd+K` for text search, `Cmd+Shift+K` for semantic search
 - **Desktop App** — Native window via Tauri v2, with a dark theme and keyboard-driven workflow
 
@@ -32,14 +33,20 @@ A desktop Markdown knowledge base built with **Tauri v2**, **React**, and **Mong
                ▼
 ┌─────────────────────────────────┐
 │  Node.js / Express (port 3001)  │
-│  - Notes CRUD                   │
+│  - Notes CRUD (SQLite-backed)   │
 │  - Atlas Search pipelines       │
 │  - Vector Search pipelines      │
 │  - CSFLE encrypted vault CRUD   │
 │  - OpenAI embedding generation  │
-└──────────────┬──────────────────┘
-               │ MongoDB Driver
-               ▼
+│  ┌───────────────────────────┐  │
+│  │  SQLite (node:sqlite)     │  │
+│  │  - offline source of truth│  │
+│  │  - FTS5 offline search    │  │
+│  └─────────────┬─────────────┘  │
+│                │ background sync│
+└────────────────┼────────────────┘
+                 │ MongoDB Driver
+                 ▼
 ┌─────────────────────────────────┐
 │  MongoDB Atlas                  │
 │  - notes collection             │
@@ -52,7 +59,7 @@ A desktop Markdown knowledge base built with **Tauri v2**, **React**, and **Mong
 
 ## Prerequisites
 
-- [Node.js](https://nodejs.org/) v20+
+- [Node.js](https://nodejs.org/) v22.5+ (the offline store uses the built-in `node:sqlite` module)
 - [pnpm](https://pnpm.io/)
 - [Rust](https://www.rust-lang.org/tools/install) (for Tauri desktop builds)
 - A [MongoDB Atlas](https://www.mongodb.com/atlas) cluster
@@ -140,6 +147,16 @@ Restart the backend, then toggle vault mode with the lock icon or `Cmd+Shift+V`.
 
 **Demo tip:** Use the `GET /api/vault/:id/raw` endpoint to show that the `markdown` field is stored as binary ciphertext — it decrypts transparently through the normal vault endpoint.
 
+## Offline & Sync
+
+Notes are stored in a local SQLite database (`backend/data/inkleaf.db`) and served from there — Atlas is synced in the background:
+
+- **Edit anywhere, sync later** — create, edit, and delete notes offline; a background engine pushes changes to Atlas when a connection returns (and pulls remote changes down, so multiple machines pointed at the same cluster stay in sync)
+- **Conflicts** — resolved per note, newest `updatedAt` wins
+- **Offline search** — text search transparently falls back to SQLite FTS5 with highlighted results; semantic search and the vault require a connection (vault notes are never cached locally)
+- **Status indicator** — the cloud icon in the header shows sync state and pending changes; click it to force a sync (`POST /api/sync/now`)
+- **Switching clusters** — if you point `MONGODB_URI` at a different cluster, the app re-seeds it from the local store rather than treating the empty remote as deletions
+
 ## Keyboard Shortcuts
 
 | Shortcut | Action |
@@ -165,6 +182,7 @@ Restart the backend, then toggle vault mode with the lock icon or `Cmd+Shift+V`.
 | Icons | Lucide React |
 | Backend | Express 5, TypeScript |
 | Database | MongoDB Atlas (driver v7) |
+| Local store | SQLite via built-in `node:sqlite` (FTS5) |
 | Encryption | mongodb-client-encryption v7 |
 | Embeddings | OpenAI `text-embedding-3-small` |
 
