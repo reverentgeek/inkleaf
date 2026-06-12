@@ -10,7 +10,7 @@ export const config = {
   encryptionKeyPath: process.env.ENCRYPTION_KEY_PATH || "./master-key.bin",
   csfleDataKeyId: process.env.CSFLE_DATA_KEY_ID || "",
   cryptSharedLibPath: process.env.CRYPT_SHARED_LIB_PATH || "",
-  dbName: "inkleaf",
+  dbName: process.env.MONGODB_DB || "inkleaf",
   sqlitePath:
     process.env.SQLITE_PATH ||
     resolve(import.meta.dirname, "../data/inkleaf.db"),

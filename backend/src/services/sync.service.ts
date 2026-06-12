@@ -84,6 +84,8 @@ async function tick(force = false): Promise<void> {
     backoffMs = 0;
     nextAttemptAt = 0;
 
+    ensureRemoteIdentity();
+
     const collection = db.collection<Note>("notes");
     await pushDirtyNotes(collection);
     await pushPendingEmbeddings(collection);
@@ -100,6 +102,40 @@ async function tick(force = false): Promise<void> {
   } finally {
     syncing = false;
   }
+}
+
+// Identity of the remote this local store last synced with (credentials
+// redacted). If the connection string or db name changes, the pull-phase
+// reconciliation would otherwise read an empty/new remote as "everything was
+// deleted remotely" and wipe the local store. Instead, detect the change and
+// re-seed: mark every row dirty (full re-push) and reset the pull checkpoint
+// so the new remote's contents merge in via last-write-wins.
+function remoteIdentity(): string {
+  return `${config.mongodbUri.replace(/\/\/[^@/]*@/, "//")}#${config.dbName}`;
+}
+
+function ensureRemoteIdentity(): void {
+  const current = remoteIdentity();
+  const stored = getSyncState("remote_identity");
+  if (stored === current) return;
+
+  const sqlite = getSqlite();
+  const { c } = sqlite
+    .prepare("SELECT COUNT(*) AS c FROM notes")
+    .get() as { c: number };
+
+  // Treat a missing identity (first run with existing data) the same as a
+  // changed one — a one-time full re-push is harmless and always safe.
+  if (c > 0) {
+    console.log(
+      `Sync: remote changed${stored ? ` (${stored} -> ${current})` : ""}; re-pushing ${c} local notes`,
+    );
+    sqlite.exec(
+      "UPDATE notes SET dirty = 1, embedding_pending = (deleted = 0)",
+    );
+    setSyncState("last_pull_at", "0");
+  }
+  setSyncState("remote_identity", current);
 }
 
 async function pushDirtyNotes(collection: Collection<Note>): Promise<void> {

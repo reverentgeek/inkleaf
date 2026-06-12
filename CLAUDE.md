@@ -71,6 +71,7 @@ pnpm create-data-key      # CSFLE: create data encryption key in Atlas
 | `ENCRYPTION_KEY_PATH` | For CSFLE | Path to `master-key.bin` |
 | `CSFLE_DATA_KEY_ID` | For CSFLE | Base64 data encryption key ID |
 | `CRYPT_SHARED_LIB_PATH` | For CSFLE | Path to `mongo_crypt_v1.dylib` |
+| `MONGODB_DB` | No (default `inkleaf`) | Database name |
 | `SQLITE_PATH` | No (default `backend/data/inkleaf.db`) | Local offline store location |
 | `SYNC_INTERVAL_MS` | No (default 15000) | Background sync tick interval |
 
@@ -127,6 +128,7 @@ _id, title, markdown (encrypted via CSFLE Random), tags[], createdAt, updatedAt
 - Both MongoClients use `serverSelectionTimeoutMS: 5000` — required so offline requests fail fast instead of hanging 30s; the server listens before Atlas connects (never `process.exit` on connect failure)
 - Sync push must use `updateOne` + `$set`, never replace — SQLite doesn't store `embedding`, a replace would destroy vector data
 - FTS5 `MATCH` throws on raw user input (`"`, `-`, `(`) — `local-search.service.ts` quote-wraps each token; keep that if touching local search
+- The sync engine stores a `remote_identity` (redacted URI + db name) in `sync_state`; if `MONGODB_URI`/`MONGODB_DB` changes, it re-seeds the new remote from SQLite (full re-push + checkpoint reset) instead of letting pull-reconciliation interpret the empty remote as mass deletion and wipe the local store
 - CSFLE vault routes use lazy initialization middleware — encrypted client connects on first vault request
 - `create-indexes` script auto-creates the `notes` collection if it doesn't exist
 
