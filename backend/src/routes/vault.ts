@@ -2,6 +2,7 @@ import { Router, Request, Response, NextFunction } from "express";
 import type { Router as IRouter } from "express";
 import * as vaultService from "../services/vault.service.js";
 import { connectEncryptedClient } from "../db/encryption.js";
+import { isOnline } from "../services/sync.service.js";
 
 const router: IRouter = Router();
 
@@ -10,6 +11,17 @@ let csfleError = "";
 
 // Middleware: try to initialize CSFLE on first request
 async function ensureCsfle(_req: Request, res: Response, next: NextFunction) {
+  // Vault notes live only in Atlas (CSFLE-encrypted) — they are deliberately
+  // not cached locally, so the vault requires a connection. This check also
+  // covers losing connectivity after CSFLE was initialized.
+  if (!isOnline()) {
+    res.status(503).json({
+      error: "Vault requires a connection",
+      code: "OFFLINE",
+    });
+    return;
+  }
+
   if (csfleReady) return next();
 
   try {

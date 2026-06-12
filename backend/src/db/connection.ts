@@ -3,16 +3,38 @@ import { config } from "../config.js";
 
 let client: MongoClient | null = null;
 let db: Db | null = null;
+let connecting: Promise<Db> | null = null;
 
-export async function connectToDatabase(): Promise<Db> {
-  if (db) return db;
+export function connectToDatabase(): Promise<Db> {
+  if (db) return Promise.resolve(db);
+  // Share one in-flight attempt; on failure it resets so callers can retry.
+  if (!connecting) {
+    connecting = doConnect().finally(() => {
+      connecting = null;
+    });
+  }
+  return connecting;
+}
 
+async function doConnect(): Promise<Db> {
   if (!config.mongodbUri) {
     throw new Error("MONGODB_URI environment variable is not set");
   }
 
-  client = new MongoClient(config.mongodbUri);
-  await client.connect();
+  // Fail fast when Atlas is unreachable (default is 30s) — offline mode
+  // depends on connection attempts resolving quickly.
+  const newClient = new MongoClient(config.mongodbUri, {
+    serverSelectionTimeoutMS: 5000,
+  });
+
+  try {
+    await newClient.connect();
+  } catch (err) {
+    await newClient.close().catch(() => {});
+    throw err;
+  }
+
+  client = newClient;
   db = client.db(config.dbName);
   console.log("Connected to MongoDB Atlas");
   return db;

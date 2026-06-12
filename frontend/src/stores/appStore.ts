@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { Note, VaultNote } from "../api/client";
+import type { Note, VaultNote, SyncStatus } from "../api/client";
 
 type Theme = "light" | "dark";
 
@@ -34,6 +34,10 @@ interface AppState {
   setActiveTag: (tag: string | null) => void;
   expandedTagPaths: string[];
   toggleTagExpanded: (path: string) => void;
+
+  // Sync status (null until the first poll completes)
+  syncStatus: SyncStatus | null;
+  setSyncStatus: (status: SyncStatus) => void;
 }
 
 export const useAppStore = create<AppState>((set) => ({
@@ -77,4 +81,7 @@ export const useAppStore = create<AppState>((set) => ({
       localStorage.setItem("inkleaf-expanded-tags", JSON.stringify(next));
       return { expandedTagPaths: next };
     }),
+
+  syncStatus: null,
+  setSyncStatus: (status) => set({ syncStatus: status }),
 }));

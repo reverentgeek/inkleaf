@@ -20,8 +20,29 @@ export interface VaultNote {
   updatedAt: Date;
 }
 
+// Wire shape of a note as the frontend consumes it (string _id, ISO dates).
+// SQLite-backed responses use this directly; Mongo docs serialize identically.
+export interface NoteDTO {
+  _id: string;
+  title: string;
+  markdown: string;
+  tags: string[];
+  notebookId: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SyncStatus {
+  online: boolean;
+  syncing: boolean;
+  lastSyncAt: string | null;
+  lastError: string | null;
+  pendingPush: number;
+  pendingEmbeddings: number;
+}
+
 export interface SearchResult {
-  _id: ObjectId;
+  _id: ObjectId | string;
   title: string;
   markdown: string;
   tags: string[];
@@ -43,6 +64,6 @@ export interface SemanticResult {
 }
 
 export interface AutocompleteResult {
-  _id: ObjectId;
+  _id: ObjectId | string;
   title: string;
 }

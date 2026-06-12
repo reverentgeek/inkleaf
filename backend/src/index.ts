@@ -1,12 +1,14 @@
 import express from "express";
 import cors from "cors";
 import { config } from "./config.js";
-import { connectToDatabase } from "./db/connection.js";
+import { getSqlite } from "./db/sqlite.js";
+import { startSyncLoop } from "./services/sync.service.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 import notesRouter from "./routes/notes.js";
 import searchRouter from "./routes/search.js";
 import semanticRouter from "./routes/semantic.js";
 import vaultRouter from "./routes/vault.js";
+import syncRouter from "./routes/sync.js";
 
 const app = express();
 
@@ -25,6 +27,7 @@ app.use("/api/notes", notesRouter);
 app.use("/api/search", searchRouter);
 app.use("/api/semantic", semanticRouter);
 app.use("/api/vault", vaultRouter);
+app.use("/api/sync", syncRouter);
 
 app.get("/api/health", (_req, res) => {
   res.json({ status: "ok" });
@@ -32,16 +35,17 @@ app.get("/api/health", (_req, res) => {
 
 app.use(errorHandler);
 
-async function start() {
-  try {
-    await connectToDatabase();
-    app.listen(config.port, () => {
-      console.log(`Backend running on http://localhost:${config.port}`);
-    });
-  } catch (err) {
-    console.error("Failed to start server:", err);
-    process.exit(1);
-  }
+function start() {
+  // The local SQLite store must always be available — initialize it first.
+  getSqlite();
+
+  // Listen immediately; the sync loop owns connecting (and reconnecting)
+  // to Atlas, so the app works offline from a cold start.
+  app.listen(config.port, () => {
+    console.log(`Backend running on http://localhost:${config.port}`);
+  });
+
+  startSyncLoop();
 }
 
 start();

@@ -7,6 +7,7 @@ A Tauri v2 desktop app: personal Markdown knowledge base demonstrating MongoDB A
 - **Frontend**: React 19 + Vite 7 + Tailwind CSS 4, runs in Tauri v2 webview (localhost:5173)
 - **Backend**: Express 5 + TypeScript on Node.js, standalone process (localhost:3001)
 - **Database**: MongoDB Atlas — `notes` collection (searchable), `vault_notes` (CSFLE encrypted), `encryption_keyVault`
+- **Offline-first**: notes CRUD is served from a local SQLite store (`backend/data/inkleaf.db`, via built-in `node:sqlite`); a background sync engine (`services/sync.service.ts`) pushes dirty rows / tombstones to Atlas and pulls remote changes (last-write-wins by `updatedAt`, ID reconciliation handles remote deletes + reseeds). Text search falls back to SQLite FTS5 when Atlas is unreachable; semantic search and vault are online-only (503 `{code:"OFFLINE"}`). `GET/POST /api/sync[/now]` exposes status; frontend polls it (`useSyncStatus`) into the Zustand store and shows a header indicator.
 - **Package manager**: pnpm with workspaces (`frontend/`, `backend/`)
 - Processes launched together via `concurrently` from root scripts
 
@@ -70,6 +71,8 @@ pnpm create-data-key      # CSFLE: create data encryption key in Atlas
 | `ENCRYPTION_KEY_PATH` | For CSFLE | Path to `master-key.bin` |
 | `CSFLE_DATA_KEY_ID` | For CSFLE | Base64 data encryption key ID |
 | `CRYPT_SHARED_LIB_PATH` | For CSFLE | Path to `mongo_crypt_v1.dylib` |
+| `SQLITE_PATH` | No (default `backend/data/inkleaf.db`) | Local offline store location |
+| `SYNC_INTERVAL_MS` | No (default 15000) | Background sync tick interval |
 
 ## Key Dependencies
 
@@ -120,7 +123,10 @@ _id, title, markdown (encrypted via CSFLE Random), tags[], createdAt, updatedAt
 
 ### Backend
 - Uses `.js` extensions in all imports (NodeNext module resolution)
-- Embedding generation is fire-and-forget on note create/update
+- Embedding generation is queued via the `embedding_pending` flag in SQLite and performed by the sync engine after content is pushed (works across offline periods)
+- Both MongoClients use `serverSelectionTimeoutMS: 5000` — required so offline requests fail fast instead of hanging 30s; the server listens before Atlas connects (never `process.exit` on connect failure)
+- Sync push must use `updateOne` + `$set`, never replace — SQLite doesn't store `embedding`, a replace would destroy vector data
+- FTS5 `MATCH` throws on raw user input (`"`, `-`, `(`) — `local-search.service.ts` quote-wraps each token; keep that if touching local search
 - CSFLE vault routes use lazy initialization middleware — encrypted client connects on first vault request
 - `create-indexes` script auto-creates the `notes` collection if it doesn't exist
 

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { Command } from "cmdk";
-import { Search, Sparkles, FileText } from "lucide-react";
+import { Search, Sparkles, FileText, CloudOff } from "lucide-react";
 import { useSearch } from "../../hooks/useSearch";
 import { useAppStore } from "../../stores/appStore";
 import SearchResults from "./SearchResults";
@@ -19,6 +19,7 @@ export default function CommandPalette({
   const [query, setQuery] = useState("");
   const mode = useAppStore((s) => s.commandPaletteMode);
   const setMode = useAppStore((s) => s.setCommandPaletteMode);
+  const isOnline = useAppStore((s) => s.syncStatus?.online ?? true);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const {
     searchResults,
@@ -58,7 +59,8 @@ export default function CommandPalette({
       if (mode === "text") {
         search(query);
         autocomplete(query);
-      } else {
+      } else if (isOnline) {
+        // Semantic search requires Atlas + OpenAI — skip the request offline.
         semanticSearch(query);
       }
     }, 200);
@@ -66,7 +68,7 @@ export default function CommandPalette({
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
-  }, [query, mode, search, autocomplete, semanticSearch, clearResults]);
+  }, [query, mode, isOnline, search, autocomplete, semanticSearch, clearResults]);
 
   if (!open) return null;
 
@@ -124,6 +126,14 @@ export default function CommandPalette({
           )}
         </div>
 
+        {/* Offline hint (text mode searches the local store) */}
+        {!isOnline && mode === "text" && (
+          <div className="flex items-center gap-1.5 px-4 py-1.5 border-b border-ink-border text-xs text-amber-500">
+            <CloudOff size={12} />
+            Offline — searching locally
+          </div>
+        )}
+
         {/* Autocomplete suggestions (text mode) */}
         {mode === "text" && autocompleteResults.length > 0 && (
           <div className="px-2 py-1 border-b border-ink-border">
@@ -144,16 +154,25 @@ export default function CommandPalette({
 
         {/* Results */}
         <Command.List className="max-h-80 overflow-y-auto p-2">
-          {query && !isSearching && results.length === 0 && (
-            <Command.Empty className="p-4 text-sm text-ink-text-faint text-center">
-              No results found
-            </Command.Empty>
+          {mode === "semantic" && !isOnline ? (
+            <div className="p-4 text-sm text-ink-text-faint text-center">
+              <CloudOff size={20} className="mx-auto mb-2 text-amber-500" />
+              Semantic search requires a connection
+            </div>
+          ) : (
+            <>
+              {query && !isSearching && results.length === 0 && (
+                <Command.Empty className="p-4 text-sm text-ink-text-faint text-center">
+                  No results found
+                </Command.Empty>
+              )}
+              <SearchResults
+                results={results}
+                onSelect={handleSelect}
+                mode={mode}
+              />
+            </>
           )}
-          <SearchResults
-            results={results}
-            onSelect={handleSelect}
-            mode={mode}
-          />
         </Command.List>
       </Command>
     </div>

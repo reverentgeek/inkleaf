@@ -58,6 +58,15 @@ export interface AutocompleteResult {
   title: string;
 }
 
+export interface SyncStatus {
+  online: boolean;
+  syncing: boolean;
+  lastSyncAt: string | null;
+  lastError: string | null;
+  pendingPush: number;
+  pendingEmbeddings: number;
+}
+
 // Notes CRUD
 export const api = {
   notes: {
@@ -116,5 +125,10 @@ export const api = {
     delete: (id: string) =>
       request<{ success: boolean }>(`/vault/${id}`, { method: "DELETE" }),
     raw: (id: string) => request<Record<string, unknown>>(`/vault/${id}/raw`),
+  },
+
+  sync: {
+    status: () => request<SyncStatus>("/sync"),
+    now: () => request<SyncStatus>("/sync/now", { method: "POST" }),
   },
 };

@@ -9,9 +9,10 @@ import RelatedNotes from "../notes/RelatedNotes";
 import CommandPalette from "../search/CommandPalette";
 import { useNotes } from "../../hooks/useNotes";
 import { useVault } from "../../hooks/useVault";
+import { useSyncStatus } from "../../hooks/useSyncStatus";
 import { useAppStore } from "../../stores/appStore";
 import type { Note } from "../../api/client";
-import { Eye, Edit3, WrapText } from "lucide-react";
+import { Eye, Edit3, WrapText, CloudOff } from "lucide-react";
 import InkleafLogo from "../InkleafLogo";
 
 export default function Layout() {
@@ -48,6 +49,13 @@ export default function Layout() {
     updateVaultNote,
     deleteVaultNote,
   } = useVault();
+
+  // Single poller for Atlas connectivity — everything reads s.syncStatus.
+  useSyncStatus();
+  const syncStatus = useAppStore((s) => s.syncStatus);
+  const isOnline = syncStatus?.online ?? true;
+  // Vault notes are CSFLE-encrypted and live only in Atlas — no offline copy.
+  const vaultUnavailable = isVaultMode && !isOnline;
 
   const editorRef = useRef<MarkdownEditorHandle>(null);
 
@@ -108,11 +116,12 @@ export default function Layout() {
 
   const handleCreateNote = useCallback(() => {
     if (isVaultMode) {
+      if (vaultUnavailable) return;
       createVaultNote();
     } else {
       createNote();
     }
-  }, [isVaultMode, createNote, createVaultNote]);
+  }, [isVaultMode, vaultUnavailable, createNote, createVaultNote]);
 
   const handleDeleteNote = useCallback(
     (id: string) => {
@@ -163,7 +172,24 @@ export default function Layout() {
           onOpenSearch={() => setCommandPaletteOpen(true)}
         />
 
-        {currentNote ? (
+        {vaultUnavailable ? (
+          /* Vault requires a connection — encrypted notes live only in Atlas */
+          <div className="flex-1 flex items-center justify-center">
+            <div className="text-center max-w-sm">
+              <div className="mb-4 flex justify-center text-ink-vault">
+                <CloudOff size={48} />
+              </div>
+              <h2 className="text-lg font-medium text-ink-text-muted mb-2">
+                Vault requires a connection
+              </h2>
+              <p className="text-sm text-ink-text-faint">
+                Encrypted vault notes are stored only in MongoDB Atlas and
+                can't be accessed offline. They'll be available again once
+                you're reconnected.
+              </p>
+            </div>
+          </div>
+        ) : currentNote ? (
           <div className="flex-1 flex overflow-hidden">
             {/* Editor area */}
             <div className="flex-1 flex flex-col min-w-0">

@@ -74,6 +74,8 @@ export async function connectEncryptedClient(): Promise<Db> {
   }
 
   encryptedClient = new MongoClient(config.mongodbUri, {
+    // Fail fast when Atlas is unreachable (vault is online-only).
+    serverSelectionTimeoutMS: 5000,
     autoEncryption,
   } as any);
 

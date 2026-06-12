@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { Search, PanelLeftClose, PanelLeft, Sun, Moon, HelpCircle } from "lucide-react";
 import VaultBadge from "../vault/VaultBadge";
 import KeyboardShortcutsDialog from "../KeyboardShortcutsDialog";
+import SyncStatusIndicator from "../SyncStatusIndicator";
 import { useAppStore } from "../../stores/appStore";
 
 interface HeaderProps {
@@ -67,6 +68,7 @@ export default function Header({
         {isVaultMode && <VaultBadge />}
       </div>
       <div className="flex items-center gap-2">
+        <SyncStatusIndicator />
         <button
           onClick={toggleTheme}
           className="p-1.5 rounded hover:bg-ink-bg-secondary text-ink-text-muted hover:text-ink-text-tertiary transition-colors"

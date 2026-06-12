@@ -11,4 +11,8 @@ export const config = {
   csfleDataKeyId: process.env.CSFLE_DATA_KEY_ID || "",
   cryptSharedLibPath: process.env.CRYPT_SHARED_LIB_PATH || "",
   dbName: "inkleaf",
+  sqlitePath:
+    process.env.SQLITE_PATH ||
+    resolve(import.meta.dirname, "../data/inkleaf.db"),
+  syncIntervalMs: parseInt(process.env.SYNC_INTERVAL_MS || "15000", 10),
 } as const;
