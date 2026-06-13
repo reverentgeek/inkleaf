@@ -22,15 +22,6 @@ export interface Note {
   updatedAt: string;
 }
 
-export interface VaultNote {
-  _id: string;
-  title: string;
-  markdown: string;
-  tags: string[];
-  createdAt: string;
-  updatedAt: string;
-}
-
 export interface SearchHighlight {
   path: string;
   texts: Array<{ value: string; type: "hit" | "text" }>;
@@ -110,24 +101,6 @@ export const api = {
       ),
     related: (noteId: string) =>
       request<SemanticResult[]>(`/semantic/related/${noteId}`),
-  },
-
-  vault: {
-    list: () => request<VaultNote[]>("/vault"),
-    get: (id: string) => request<VaultNote>(`/vault/${id}`),
-    create: (data: Partial<VaultNote>) =>
-      request<VaultNote>("/vault", {
-        method: "POST",
-        body: JSON.stringify(data),
-      }),
-    update: (id: string, data: Partial<VaultNote>) =>
-      request<VaultNote>(`/vault/${id}`, {
-        method: "PUT",
-        body: JSON.stringify(data),
-      }),
-    delete: (id: string) =>
-      request<{ success: boolean }>(`/vault/${id}`, { method: "DELETE" }),
-    raw: (id: string) => request<Record<string, unknown>>(`/vault/${id}/raw`),
   },
 
   sync: {

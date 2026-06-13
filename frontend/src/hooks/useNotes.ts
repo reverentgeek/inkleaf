@@ -10,7 +10,6 @@ export function useNotes() {
     activeNoteId,
     setActiveNoteId,
     activeTag,
-    isVaultMode,
   } = useAppStore();
 
   // Bumps when a background sync pulls remote changes into the local store
@@ -18,14 +17,13 @@ export function useNotes() {
   const syncRevision = useAppStore((s) => s.syncStatus?.revision);
 
   const fetchNotes = useCallback(async () => {
-    if (isVaultMode) return;
     try {
       const data = await api.notes.list();
       setNotes(data);
     } catch (err) {
       console.error("Failed to fetch notes:", err);
     }
-  }, [isVaultMode, setNotes]);
+  }, [setNotes]);
 
   useEffect(() => {
     fetchNotes();

@@ -1,12 +1,11 @@
 import NoteCard from "./NoteCard";
-import type { Note, VaultNote } from "../../api/client";
+import type { Note } from "../../api/client";
 
 interface NoteListProps {
-  notes: (Note | VaultNote)[];
+  notes: Note[];
   activeNoteId: string | null;
   onSelect: (id: string) => void;
   onDelete: (id: string) => void;
-  isVault?: boolean;
 }
 
 export default function NoteList({
@@ -14,7 +13,6 @@ export default function NoteList({
   activeNoteId,
   onSelect,
   onDelete,
-  isVault,
 }: NoteListProps) {
   if (notes.length === 0) {
     return (
@@ -29,11 +27,10 @@ export default function NoteList({
       {notes.map((note) => (
         <NoteCard
           key={note._id}
-          note={note as Note}
+          note={note}
           isActive={note._id === activeNoteId}
           onClick={() => onSelect(note._id)}
           onDelete={() => onDelete(note._id)}
-          isVault={isVault}
         />
       ))}
     </div>

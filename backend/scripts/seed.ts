@@ -202,63 +202,6 @@ db.documents.aggregate([
     notebookId: "learning",
   },
   {
-    title: "Client-Side Field Level Encryption (CSFLE)",
-    markdown: `# Client-Side Field Level Encryption (CSFLE)
-
-MongoDB CSFLE encrypts sensitive data in your application before it's sent to the server. Even database administrators with full access cannot read encrypted fields.
-
-## How CSFLE Works
-
-1. **Key Management**: A Customer Master Key (CMK) protects Data Encryption Keys (DEKs)
-2. **Automatic Encryption**: The MongoDB driver encrypts specified fields before sending to the server
-3. **Transparent Decryption**: Authorized clients decrypt data automatically on read
-4. **Server Never Sees Plaintext**: The server only ever stores and processes ciphertext
-
-## Encryption Algorithms
-
-### Deterministic
-- Same plaintext always produces the same ciphertext
-- Supports equality queries on encrypted fields
-- Use for fields you need to query (e.g., SSN lookup)
-
-### Random
-- Same plaintext produces different ciphertext each time
-- More secure but doesn't support queries
-- Use for highly sensitive fields (e.g., medical records)
-
-## Schema Map Example
-
-\`\`\`javascript
-const schemaMap = {
-  "mydb.patients": {
-    bsonType: "object",
-    properties: {
-      ssn: {
-        encrypt: {
-          bsonType: "string",
-          algorithm: "AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic"
-        }
-      },
-      medicalRecord: {
-        encrypt: {
-          bsonType: "object",
-          algorithm: "AEAD_AES_256_CBC_HMAC_SHA_512-Random"
-        }
-      }
-    }
-  }
-};
-\`\`\`
-
-## Key Benefits
-
-- Zero-trust data protection
-- Compliance with GDPR, HIPAA, PCI-DSS
-- Defense in depth — encryption at rest AND in the client`,
-    tags: ["mongodb", "csfle", "encryption", "security"],
-    notebookId: "learning",
-  },
-  {
     title: "React Hooks Best Practices",
     markdown: `# React Hooks Best Practices
 
