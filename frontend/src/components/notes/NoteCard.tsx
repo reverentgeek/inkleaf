@@ -8,7 +8,6 @@ interface NoteCardProps {
   isActive: boolean;
   onClick: () => void;
   onDelete: () => void;
-  isVault?: boolean;
 }
 
 export default function NoteCard({
@@ -16,7 +15,6 @@ export default function NoteCard({
   isActive,
   onClick,
   onDelete,
-  isVault,
 }: NoteCardProps) {
   const [showConfirm, setShowConfirm] = useState(false);
 
@@ -41,9 +39,7 @@ export default function NoteCard({
         onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") onClick(); }}
         className={`w-full text-left p-3 rounded-lg border transition-colors group cursor-pointer ${
           isActive
-            ? isVault
-              ? "bg-ink-vault/10 border-ink-vault/30"
-              : "bg-ink-accent/10 border-ink-accent/30"
+            ? "bg-ink-accent/10 border-ink-accent/30"
             : "bg-transparent border-transparent hover:bg-ink-bg-secondary/50"
         }`}
       >
@@ -51,7 +47,7 @@ export default function NoteCard({
           <div className="flex items-center gap-2 min-w-0">
             <FileText
               size={14}
-              className={`flex-shrink-0 ${isVault ? "text-ink-vault" : "text-ink-text-faint"}`}
+              className="flex-shrink-0 text-ink-text-faint"
             />
             <span className="font-medium text-sm truncate">
               {note.title || "Untitled"}

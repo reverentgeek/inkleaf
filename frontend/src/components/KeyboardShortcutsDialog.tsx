@@ -14,7 +14,6 @@ const shortcuts = [
   { keys: `${mod}${shift}K`, description: "Search (semantic)" },
   { keys: `${mod}E`, description: "Edit mode" },
   { keys: `${mod}${shift}E`, description: "Preview mode" },
-  { keys: `${mod}${shift}V`, description: "Toggle vault" },
   { keys: `${mod}${shift}T`, description: "Toggle theme" },
   { keys: `${mod}${shift}F`, description: "Format markdown" },
   { keys: `${mod}/`, description: "Keyboard shortcuts" },

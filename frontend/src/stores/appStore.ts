@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { Note, VaultNote, SyncStatus } from "../api/client";
+import type { Note, SyncStatus } from "../api/client";
 
 type Theme = "light" | "dark";
 
@@ -9,12 +9,6 @@ interface AppState {
   setNotes: (notes: Note[]) => void;
   activeNoteId: string | null;
   setActiveNoteId: (id: string | null) => void;
-
-  // Vault
-  vaultNotes: VaultNote[];
-  setVaultNotes: (notes: VaultNote[]) => void;
-  isVaultMode: boolean;
-  toggleVaultMode: () => void;
 
   // UI
   theme: Theme;
@@ -45,11 +39,6 @@ export const useAppStore = create<AppState>((set) => ({
   setNotes: (notes) => set({ notes }),
   activeNoteId: null,
   setActiveNoteId: (id) => set({ activeNoteId: id }),
-
-  vaultNotes: [],
-  setVaultNotes: (notes) => set({ vaultNotes: notes }),
-  isVaultMode: false,
-  toggleVaultMode: () => set((s) => ({ isVaultMode: !s.isVaultMode, activeNoteId: null })),
 
   theme: (localStorage.getItem("inkleaf-theme") as Theme) || "dark",
   toggleTheme: () =>

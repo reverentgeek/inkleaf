@@ -1,13 +1,13 @@
 # Inkleaf
 
-A Tauri v2 desktop app: personal Markdown knowledge base demonstrating MongoDB Atlas Search, Atlas Vector Search, and Client-Side Field Level Encryption (CSFLE).
+A Tauri v2 desktop app: personal Markdown knowledge base demonstrating MongoDB Atlas Search and Atlas Vector Search.
 
 ## Architecture
 
 - **Frontend**: React 19 + Vite 7 + Tailwind CSS 4, runs in Tauri v2 webview (localhost:5173)
 - **Backend**: Express 5 + TypeScript on Node.js, standalone process (localhost:3001)
-- **Database**: MongoDB Atlas — `notes` collection (searchable), `vault_notes` (CSFLE encrypted), `encryption_keyVault`
-- **Offline-first**: notes CRUD is served from a local SQLite store (`backend/data/inkleaf.db`, via built-in `node:sqlite`); a background sync engine (`services/sync.service.ts`) pushes dirty rows / tombstones to Atlas and pulls remote changes (last-write-wins by `updatedAt`, ID reconciliation handles remote deletes + reseeds). Text search falls back to SQLite FTS5 when Atlas is unreachable; semantic search and vault are online-only (503 `{code:"OFFLINE"}`). `GET/POST /api/sync[/now]` exposes status; frontend polls it (`useSyncStatus`) into the Zustand store and shows a header indicator.
+- **Database**: MongoDB Atlas — `notes` collection (searchable)
+- **Offline-first**: notes CRUD is served from a local SQLite store (`backend/data/inkleaf.db`, via built-in `node:sqlite`); a background sync engine (`services/sync.service.ts`) pushes dirty rows / tombstones to Atlas and pulls remote changes (last-write-wins by `updatedAt`, ID reconciliation handles remote deletes + reseeds). Text search falls back to SQLite FTS5 when Atlas is unreachable; semantic search is online-only (503 `{code:"OFFLINE"}`). `GET/POST /api/sync[/now]` exposes status; frontend polls it (`useSyncStatus`) into the Zustand store and shows a header indicator.
 - **Package manager**: pnpm with workspaces (`frontend/`, `backend/`)
 - Processes launched together via `concurrently` from root scripts
 
@@ -23,25 +23,23 @@ inkleaf/
 │   │   ├── index.ts          # Express server entry
 │   │   ├── config.ts         # Env vars
 │   │   ├── db/
-│   │   │   ├── connection.ts # Standard MongoClient singleton
-│   │   │   └── encryption.ts # CSFLE-enabled MongoClient + schema map
-│   │   ├── routes/           # notes, search, semantic, vault
+│   │   │   └── connection.ts # Standard MongoClient singleton
+│   │   ├── routes/           # notes, search, semantic
 │   │   ├── services/         # Business logic for each route
 │   │   ├── middleware/       # errorHandler
-│   │   └── types/            # Note, VaultNote, SearchResult interfaces
-│   └── scripts/              # seed, create-indexes, generate-master-key, create-data-key
+│   │   └── types/            # Note, SearchResult interfaces
+│   └── scripts/              # seed, create-indexes
 └── frontend/
     ├── src/
     │   ├── App.tsx           # Root + keyboard shortcuts
     │   ├── api/client.ts     # Typed fetch wrapper for all API endpoints
     │   ├── stores/appStore.ts # Zustand global state
-    │   ├── hooks/            # useNotes, useSearch, useVault
+    │   ├── hooks/            # useNotes, useSearch
     │   ├── components/
     │   │   ├── layout/       # Layout (3-column), Sidebar, Header
     │   │   ├── editor/       # MarkdownEditor (CodeMirror), MarkdownPreview
     │   │   ├── search/       # CommandPalette (cmdk), SearchResults
     │   │   ├── notes/        # NoteList, NoteCard, RelatedNotes
-    │   │   ├── vault/        # VaultToggle, VaultBadge
     │   │   └── tags/         # TagInput, TagFilter
     │   └── styles/globals.css
     └── src-tauri/            # Tauri v2 Rust config
@@ -55,10 +53,8 @@ All run from the project root with `pnpm`:
 pnpm dev              # Backend + Vite frontend (browser)
 pnpm dev:tauri        # Backend + Tauri desktop window
 pnpm build            # TypeScript compile + Vite production build
-pnpm seed             # Seed 18 sample notes (+ embeddings if OPENAI_API_KEY set)
+pnpm seed             # Seed 17 sample notes (+ embeddings if OPENAI_API_KEY set)
 pnpm create-indexes   # Create Atlas Search + Vector Search indexes
-pnpm generate-master-key  # CSFLE: generate 96-byte local master key
-pnpm create-data-key      # CSFLE: create data encryption key in Atlas
 ```
 
 ## Environment Variables (.env)
@@ -68,16 +64,13 @@ pnpm create-data-key      # CSFLE: create data encryption key in Atlas
 | `MONGODB_URI` | Yes | Atlas connection string |
 | `OPENAI_API_KEY` | For Vector Search | OpenAI API key (needs `text-embedding-3-small` access) |
 | `PORT` | No (default 3001) | Backend port |
-| `ENCRYPTION_KEY_PATH` | For CSFLE | Path to `master-key.bin` |
-| `CSFLE_DATA_KEY_ID` | For CSFLE | Base64 data encryption key ID |
-| `CRYPT_SHARED_LIB_PATH` | For CSFLE | Path to `mongo_crypt_v1.dylib` |
 | `MONGODB_DB` | No (default `inkleaf`) | Database name |
 | `SQLITE_PATH` | No (default `backend/data/inkleaf.db`) | Local offline store location |
 | `SYNC_INTERVAL_MS` | No (default 15000) | Background sync tick interval |
 
 ## Key Dependencies
 
-**Backend**: express 5, mongodb 7, mongodb-client-encryption 7, openai 6, cors, dotenv 17, zod 4, tsx
+**Backend**: express 5, mongodb 7, openai 6, cors, dotenv 17, zod 4, tsx
 
 **Frontend**: react 19, @uiw/react-codemirror, @codemirror/lang-markdown, @codemirror/theme-one-dark, cmdk, react-markdown 10, remark-gfm, rehype-highlight, zustand 5, lucide-react, @tauri-apps/api 2, tailwindcss 4, vite 7
 
@@ -86,11 +79,6 @@ pnpm create-data-key      # CSFLE: create data encryption key in Atlas
 ### `notes` collection
 ```
 _id, title, markdown, tags[], notebookId, createdAt, updatedAt, embedding[] (1536 dims)
-```
-
-### `vault_notes` collection (CSFLE)
-```
-_id, title, markdown (encrypted via CSFLE Random), tags[], createdAt, updatedAt
 ```
 
 ## Atlas Indexes
@@ -104,7 +92,6 @@ _id, title, markdown (encrypted via CSFLE Random), tags[], createdAt, updatedAt
 |----------|--------|
 | Cmd+K | Open command palette (text search) |
 | Cmd+Shift+K | Open command palette (semantic search) |
-| Cmd+Shift+V | Toggle vault mode |
 | Cmd+Shift+T | Toggle light/dark theme |
 | Escape | Close command palette |
 
@@ -125,17 +112,16 @@ _id, title, markdown (encrypted via CSFLE Random), tags[], createdAt, updatedAt
 ### Backend
 - Uses `.js` extensions in all imports (NodeNext module resolution)
 - Embedding generation is queued via the `embedding_pending` flag in SQLite and performed by the sync engine after content is pushed (works across offline periods)
-- Both MongoClients use `serverSelectionTimeoutMS: 5000` — required so offline requests fail fast instead of hanging 30s; the server listens before Atlas connects (never `process.exit` on connect failure)
+- The MongoClient uses `serverSelectionTimeoutMS: 5000` — required so offline requests fail fast instead of hanging 30s; the server listens before Atlas connects (never `process.exit` on connect failure)
 - Sync push must use `updateOne` + `$set`, never replace — SQLite doesn't store `embedding`, a replace would destroy vector data
 - FTS5 `MATCH` throws on raw user input (`"`, `-`, `(`) — `local-search.service.ts` quote-wraps each token; keep that if touching local search
 - The sync engine stores a `remote_identity` (redacted URI + db name) in `sync_state`; if `MONGODB_URI`/`MONGODB_DB` changes, it re-seeds the new remote from SQLite (full re-push + checkpoint reset) instead of letting pull-reconciliation interpret the empty remote as mass deletion and wipe the local store
-- CSFLE vault routes use lazy initialization middleware — encrypted client connects on first vault request
 - `create-indexes` script auto-creates the `notes` collection if it doesn't exist
 
 ### Frontend
 - Tailwind v4: CSS-first config via `@import "tailwindcss"` in globals.css, uses `@tailwindcss/vite` plugin (no tailwind.config.js or postcss.config.js)
 - **Theming**: Light/dark via CSS custom properties (`--ink-*`) registered as Tailwind colors (`ink-*`) in `@theme`. Theme persists to `localStorage("inkleaf-theme")`, defaults to dark. Toggle via header button or `Cmd+Shift+T`. Anti-FOUC script in `index.html` applies `.dark` class before React loads.
-- Color tokens: `ink-bg-*`, `ink-text-*`, `ink-accent-*`, `ink-vault-*`, `ink-border-*` — defined in `:root` (light) and `.dark` (dark) blocks in globals.css
+- Color tokens: `ink-bg-*`, `ink-text-*`, `ink-accent-*`, `ink-border-*` — defined in `:root` (light) and `.dark` (dark) blocks in globals.css
 - Tauri v2 CSP must include `connect-src http://localhost:3001` for backend API access
 - `useSearch` hook: all returned functions must be wrapped in `useCallback` to prevent infinite re-render loops in consumers
 

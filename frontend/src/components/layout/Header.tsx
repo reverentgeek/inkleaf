@@ -1,13 +1,11 @@
 import { useState, useEffect, useCallback } from "react";
 import { Search, PanelLeftClose, PanelLeft, Sun, Moon, HelpCircle } from "lucide-react";
-import VaultBadge from "../vault/VaultBadge";
 import KeyboardShortcutsDialog from "../KeyboardShortcutsDialog";
 import SyncStatusIndicator from "../SyncStatusIndicator";
 import { useAppStore } from "../../stores/appStore";
 
 interface HeaderProps {
   title: string;
-  isVaultMode: boolean;
   sidebarOpen: boolean;
   onToggleSidebar: () => void;
   onOpenSearch: () => void;
@@ -15,7 +13,6 @@ interface HeaderProps {
 
 export default function Header({
   title,
-  isVaultMode,
   sidebarOpen,
   onToggleSidebar,
   onOpenSearch,
@@ -65,7 +62,6 @@ export default function Header({
         <h1 className="text-sm font-medium text-ink-text-secondary truncate max-w-[300px]">
           {title || "Inkleaf"}
         </h1>
-        {isVaultMode && <VaultBadge />}
       </div>
       <div className="flex items-center gap-2">
         <SyncStatusIndicator />

@@ -7,7 +7,6 @@ import { errorHandler } from "./middleware/errorHandler.js";
 import notesRouter from "./routes/notes.js";
 import searchRouter from "./routes/search.js";
 import semanticRouter from "./routes/semantic.js";
-import vaultRouter from "./routes/vault.js";
 import syncRouter from "./routes/sync.js";
 
 const app = express();
@@ -26,7 +25,6 @@ app.use(express.json({ limit: "5mb" }));
 app.use("/api/notes", notesRouter);
 app.use("/api/search", searchRouter);
 app.use("/api/semantic", semanticRouter);
-app.use("/api/vault", vaultRouter);
 app.use("/api/sync", syncRouter);
 
 app.get("/api/health", (_req, res) => {

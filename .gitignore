@@ -3,7 +3,5 @@ dist/
 backend/data/
 target/
 .env
-master-key.bin
-*.bin
 .DS_Store
 .playwright-mcp/

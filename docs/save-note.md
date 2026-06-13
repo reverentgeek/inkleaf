@@ -33,23 +33,19 @@ Traces the full data flow when a user edits a note in Inkleaf — from keystroke
 
 The user types inside a **CodeMirror 6** editor rendered by `MarkdownEditor`. Every keystroke triggers CodeMirror's `onChange` callback, which propagates up to `Layout.tsx`.
 
-**`frontend/src/components/layout/Layout.tsx:82-91`**
+**`frontend/src/components/layout/Layout.tsx:72-78`**
 
 ```ts
 const handleMarkdownChange = useCallback(
   (markdown: string) => {
     if (!activeNoteId) return;
-    if (isVaultMode) {
-      updateVaultNote(activeNoteId, { markdown });
-    } else {
-      updateNote(activeNoteId, { markdown });
-    }
+    updateNote(activeNoteId, { markdown });
   },
-  [activeNoteId, isVaultMode, updateNote, updateVaultNote],
+  [activeNoteId, updateNote],
 );
 ```
 
-For regular (non-vault) notes, this calls `updateNote()` from the `useNotes` hook.
+This calls `updateNote()` from the `useNotes` hook.
 
 ---
 
@@ -245,7 +241,7 @@ If `OPENAI_API_KEY` is not configured, `generateEmbedding()` returns `null` and 
 | Layer      | File                                   | What happens                                      |
 | ---------- | -------------------------------------- | ------------------------------------------------- |
 | Editor     | `components/editor/MarkdownEditor.tsx` | CodeMirror fires `onChange`                       |
-| Layout     | `components/layout/Layout.tsx:82`      | `handleMarkdownChange` calls `updateNote()`       |
+| Layout     | `components/layout/Layout.tsx:72`      | `handleMarkdownChange` calls `updateNote()`       |
 | Hook       | `hooks/useNotes.ts:48`                 | Optimistic Zustand update + 400ms debounce        |
 | API Client | `api/client.ts:74`                     | `PUT /api/notes/:id` with JSON body               |
 | Tauri CSP  | `src-tauri/tauri.conf.json:22`         | `connect-src` whitelist allows the request        |

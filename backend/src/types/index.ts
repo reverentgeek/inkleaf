@@ -1,4 +1,4 @@
-import { ObjectId, Binary } from "mongodb";
+import { ObjectId } from "mongodb";
 
 export interface Note {
   _id?: ObjectId;
@@ -9,15 +9,6 @@ export interface Note {
   createdAt: Date;
   updatedAt: Date;
   embedding?: number[];
-}
-
-export interface VaultNote {
-  _id?: ObjectId;
-  title: string;
-  markdown: string | Binary;
-  tags: string[];
-  createdAt: Date;
-  updatedAt: Date;
 }
 
 // Wire shape of a note as the frontend consumes it (string _id, ISO dates).

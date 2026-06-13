@@ -3,7 +3,7 @@ import Layout from "./components/layout/Layout";
 import { useAppStore } from "./stores/appStore";
 
 export default function App() {
-  const { setCommandPaletteOpen, openCommandPalette, toggleVaultMode, setViewMode, theme, toggleTheme } = useAppStore();
+  const { setCommandPaletteOpen, openCommandPalette, setViewMode, theme, toggleTheme } = useAppStore();
 
   // Sync theme class to <html>
   useEffect(() => {
@@ -32,13 +32,6 @@ export default function App() {
         return;
       }
 
-      // Cmd+Shift+V: Toggle vault mode
-      if (isMod && e.shiftKey && e.key.toLowerCase() === "v") {
-        e.preventDefault();
-        toggleVaultMode();
-        return;
-      }
-
       // Cmd+Shift+T: Toggle theme
       if (isMod && e.shiftKey && e.key.toLowerCase() === "t") {
         e.preventDefault();
@@ -54,7 +47,7 @@ export default function App() {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [setCommandPaletteOpen, openCommandPalette, toggleVaultMode, setViewMode, toggleTheme]);
+  }, [setCommandPaletteOpen, openCommandPalette, setViewMode, toggleTheme]);
 
   return <Layout />;
 }
