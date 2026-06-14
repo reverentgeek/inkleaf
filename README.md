@@ -117,6 +117,8 @@ pnpm seed
 
 Inserts 17 sample notes covering MongoDB, React, TypeScript, and more. If `OPENAI_API_KEY` is set, it also generates vector embeddings for each note.
 
+> **Heads up:** seeding into an empty database just works. Re-seeding, though, deletes every existing note first — so if the `notes` collection already has data, the script refuses unless you pass `--force` (`pnpm seed --force`), guarding against accidentally clobbering real data.
+
 ### 5. Run the app
 
 **Desktop (Tauri):**

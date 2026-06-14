@@ -948,9 +948,27 @@ async function main() {
     await client.connect();
     const db = client.db(dbName);
 
+    // Guard: seeding is destructive — it deletes every note in the target
+    // database before inserting the samples. Refuse to clobber an existing
+    // collection unless the caller explicitly opts in with --force (or
+    // SEED_FORCE=1), so an accidental run can't wipe real data.
+    const force =
+      process.argv.includes("--force") || process.env.SEED_FORCE === "1";
+    const existing = await db.collection("notes").countDocuments();
+    if (existing > 0 && !force) {
+      console.error(
+        `\nRefusing to seed: "${dbName}.notes" already contains ${existing} note(s).\n` +
+          `Seeding deletes ALL existing notes first. If you really want to\n` +
+          `replace them, re-run with --force (or SEED_FORCE=1):\n\n` +
+          `  pnpm seed --force\n`,
+      );
+      process.exitCode = 1;
+      return;
+    }
+
     // Clear existing notes
-    await db.collection("notes").deleteMany({});
-    console.log("Cleared existing notes");
+    const { deletedCount } = await db.collection("notes").deleteMany({});
+    console.log(`Cleared ${deletedCount} existing note(s)`);
 
     // Insert seed notes
     const now = new Date();
