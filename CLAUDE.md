@@ -53,7 +53,7 @@ All run from the project root with `pnpm`:
 pnpm dev              # Backend + Vite frontend (browser)
 pnpm dev:tauri        # Backend + Tauri desktop window
 pnpm build            # TypeScript compile + Vite production build
-pnpm seed             # Seed 17 sample notes (+ embeddings if OPENAI_API_KEY set)
+pnpm seed             # Seed 17 sample notes (+ embeddings if OPENAI_API_KEY set); destructive — refuses if notes exist unless --force
 pnpm create-indexes   # Create Atlas Search + Vector Search indexes
 ```
 
