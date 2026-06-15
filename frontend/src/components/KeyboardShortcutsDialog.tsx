@@ -16,6 +16,8 @@ const shortcuts = [
   { keys: `${mod}${shift}E`, description: "Preview mode" },
   { keys: `${mod}${shift}T`, description: "Toggle theme" },
   { keys: `${mod}${shift}F`, description: "Format markdown" },
+  { keys: `${mod}O`, description: "Import Markdown file" },
+  { keys: `${mod}S`, description: "Export note as Markdown" },
   { keys: `${mod}/`, description: "Keyboard shortcuts" },
   { keys: "Esc", description: "Close dialog / palette" },
 ];

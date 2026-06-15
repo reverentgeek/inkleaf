@@ -1,8 +1,11 @@
 import { useState, useEffect, useCallback } from "react";
-import { Search, PanelLeftClose, PanelLeft, Sun, Moon, HelpCircle } from "lucide-react";
+import { Search, PanelLeftClose, PanelLeft, Sun, Moon, HelpCircle, FileInput, FileOutput } from "lucide-react";
 import KeyboardShortcutsDialog from "../KeyboardShortcutsDialog";
 import SyncStatusIndicator from "../SyncStatusIndicator";
 import { useAppStore } from "../../stores/appStore";
+import { useImportExport } from "../../hooks/useImportExport";
+
+const mod = navigator.platform.includes("Mac") ? "⌘" : "Ctrl+";
 
 interface HeaderProps {
   title: string;
@@ -18,6 +21,7 @@ export default function Header({
   onOpenSearch,
 }: HeaderProps) {
   const { theme, toggleTheme } = useAppStore();
+  const { importFile, exportActiveNote, canExport } = useImportExport();
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
 
   const closeShortcuts = useCallback(() => setShortcutsOpen(false), []);
@@ -65,6 +69,22 @@ export default function Header({
       </div>
       <div className="flex items-center gap-2">
         <SyncStatusIndicator />
+        <button
+          onClick={importFile}
+          className="p-1.5 rounded hover:bg-ink-bg-secondary text-ink-text-muted hover:text-ink-text-tertiary transition-colors"
+          title={`Import Markdown file (${mod}O)`}
+        >
+          <FileInput size={16} />
+        </button>
+        <button
+          onClick={exportActiveNote}
+          disabled={!canExport}
+          className="p-1.5 rounded hover:bg-ink-bg-secondary text-ink-text-muted hover:text-ink-text-tertiary transition-colors disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-ink-text-muted disabled:cursor-not-allowed"
+          title={canExport ? `Export note as Markdown (${mod}S)` : "Select a note to export"}
+        >
+          <FileOutput size={16} />
+        </button>
+        <div className="w-px h-4 bg-ink-border-strong mx-0.5" />
         <button
           onClick={toggleTheme}
           className="p-1.5 rounded hover:bg-ink-bg-secondary text-ink-text-muted hover:text-ink-text-tertiary transition-colors"

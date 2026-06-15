@@ -93,6 +93,8 @@ _id, title, markdown, tags[], notebookId, createdAt, updatedAt, embedding[] (153
 | Cmd+K | Open command palette (text search) |
 | Cmd+Shift+K | Open command palette (semantic search) |
 | Cmd+Shift+T | Toggle light/dark theme |
+| Cmd+O | Import a Markdown file as a new note (desktop menu accelerator) |
+| Cmd+S | Export the active note as a Markdown file (desktop menu accelerator) |
 | Escape | Close command palette |
 
 ## Coding Patterns & Gotchas
@@ -129,3 +131,10 @@ _id, title, markdown, tags[], notebookId, createdAt, updatedAt, embedding[] (153
 - `beforeDevCommand` in tauri.conf.json must use `pnpm dev` (not `npm run dev`)
 - `app.title` is not a valid field in Tauri v2 config — title only goes on individual windows
 - Icon files required at build time in `src-tauri/icons/`
+- The native menu (Rust, `src-tauri/src/lib.rs`) emits events the webview listens for (`@tauri-apps/api/event`): `show-keyboard-shortcuts`, `menu-import`, `menu-export`. Add a new menu item by building it, adding it to a `SubmenuBuilder`, and emitting an event in `on_menu_event`
+
+### Import / Export
+- Markdown file import/export is **frontend-side** — no backend endpoints. Import parses the file and calls `api.notes.create()`, reusing the normal sync/embedding path; export serializes the active note in the webview.
+- `lib/markdownFile.ts` handles YAML frontmatter (`js-yaml`): import title resolution is frontmatter `title` → first H1 → file name (sans extension); export writes `title`/`tags`/`createdAt`/`updatedAt` frontmatter. `createdAt`/`updatedAt` are informational — an imported note is always new.
+- `lib/fileIO.ts` is platform-aware: Tauri dialog + fs plugins in the desktop app, hidden `<input type=file>` / Blob download in the browser (`pnpm dev`). Browser blob-download is unreliable in WKWebView, which is why the desktop path uses the fs plugin. Triggered from Header buttons (both contexts) and the native File menu (desktop only).
+- fs plugin access is scoped to `$HOME/**` in `capabilities/default.json`; importing/exporting outside the home dir will be denied.
