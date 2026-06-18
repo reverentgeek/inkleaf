@@ -3,6 +3,7 @@ packages:
   - backend
 allowBuilds:
   esbuild: true
+  mongodb-client-encryption: true
 minimumReleaseAgeExclude:
   - picomatch@4.0.4
   - path-to-regexp@8.4.0
