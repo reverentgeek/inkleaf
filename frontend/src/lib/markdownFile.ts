@@ -1,4 +1,4 @@
-import yaml from "js-yaml";
+import { load as yamlLoad, dump as yamlDump } from "js-yaml";
 import type { Note } from "../api/client";
 
 export interface ParsedMarkdown {
@@ -28,7 +28,7 @@ export function parseMarkdownFile(content: string, fileName: string): ParsedMark
   const match = content.match(FRONTMATTER_RE);
   if (match) {
     try {
-      const loaded = yaml.load(match[1]);
+      const loaded = yamlLoad(match[1]);
       if (loaded && typeof loaded === "object" && !Array.isArray(loaded)) {
         data = loaded as Record<string, unknown>;
         body = content.slice(match[0].length);
@@ -81,7 +81,7 @@ export function serializeNoteToMarkdown(note: Note): string {
     createdAt: note.createdAt,
     updatedAt: note.updatedAt,
   };
-  const yamlBlock = yaml.dump(frontmatter, { lineWidth: -1, sortKeys: false }).trimEnd();
+  const yamlBlock = yamlDump(frontmatter, { lineWidth: -1, sortKeys: false }).trimEnd();
   const body = note.markdown.replace(/^(?:\r?\n)+/, "");
   return `---\n${yamlBlock}\n---\n\n${body}\n`;
 }
