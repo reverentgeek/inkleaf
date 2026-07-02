@@ -23,6 +23,8 @@ export default function Layout() {
     setActiveTag,
     expandedTagPaths,
     toggleTagExpanded,
+    tagsSectionOpen,
+    toggleTagsSection,
     activeNoteId,
     setActiveNoteId,
     viewMode,
@@ -118,6 +120,8 @@ export default function Layout() {
           onCreateNote={handleCreateNote}
           onSelectTag={setActiveTag}
           onToggleTagExpanded={toggleTagExpanded}
+          tagsSectionOpen={tagsSectionOpen}
+          onToggleTagsSection={toggleTagsSection}
         />
       )}
 

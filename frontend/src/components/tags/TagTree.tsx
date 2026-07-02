@@ -95,15 +95,17 @@ export default function TagTree({
       {/* All Notes */}
       <button
         onClick={() => onSelectTag(null)}
-        className={`w-full flex items-center gap-2 px-3 py-1.5 text-sm transition-colors ${
+        className={`w-full flex items-center gap-2 px-3 py-1 text-[13px] transition-colors ${
           activeTag === null
             ? "text-ink-accent-lighter bg-ink-accent/10"
             : "text-ink-text-muted hover:text-ink-text-secondary hover:bg-ink-bg-secondary"
         }`}
       >
-        <Tag size={13} />
+        <Tag size={12} />
         <span>All Notes</span>
-        <span className="ml-auto text-xs text-ink-text-faint">{notes.length}</span>
+        <span className="ml-auto text-[11px] tabular-nums text-ink-text-faint">
+          {notes.length}
+        </span>
       </button>
 
       {/* Tag tree */}
@@ -142,16 +144,37 @@ function TagNodeRow({
   const hasChildren = node.children.length > 0;
   const isExpanded = expandedPaths.includes(node.fullPath);
   const isActive = activeTag === node.fullPath;
+  // The active tag is hidden inside this collapsed branch — tint the row so
+  // the filter doesn't visually disappear.
+  const hidesActiveTag =
+    !isExpanded &&
+    activeTag !== null &&
+    activeTag.startsWith(node.fullPath + "/");
+
+  const handleSelect = () => onSelectTag(isActive ? null : node.fullPath);
 
   return (
     <>
       <div
-        className={`flex items-center gap-1 py-1 pr-3 text-sm cursor-pointer transition-colors ${
+        role="button"
+        tabIndex={0}
+        aria-current={isActive ? "true" : undefined}
+        onClick={handleSelect}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            handleSelect();
+          }
+        }}
+        title={isActive ? "Clear filter" : node.fullPath}
+        className={`flex items-center gap-1 py-0.5 pr-3 text-[13px] cursor-pointer transition-colors outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ink-accent/60 ${
           isActive
             ? "text-ink-accent-lighter bg-ink-accent/10"
-            : "text-ink-text-muted hover:text-ink-text-secondary hover:bg-ink-bg-secondary"
+            : hidesActiveTag
+              ? "text-ink-accent-lighter hover:bg-ink-bg-secondary"
+              : "text-ink-text-muted hover:text-ink-text-secondary hover:bg-ink-bg-secondary"
         }`}
-        style={{ paddingLeft: `${depth * 16 + 12}px` }}
+        style={{ paddingLeft: `${depth * 12 + 12}px` }}
       >
         {/* Expand/collapse toggle */}
         {hasChildren ? (
@@ -160,6 +183,8 @@ function TagNodeRow({
               e.stopPropagation();
               onToggleExpand(node.fullPath);
             }}
+            aria-expanded={isExpanded}
+            aria-label={isExpanded ? "Collapse" : "Expand"}
             className="p-0.5 rounded hover:bg-ink-bg-elevated shrink-0"
           >
             {isExpanded ? (
@@ -175,15 +200,10 @@ function TagNodeRow({
         )}
 
         {/* Tag name */}
-        <button
-          onClick={() => onSelectTag(node.fullPath)}
-          className="flex-1 text-left truncate"
-        >
-          {node.name}
-        </button>
+        <span className="flex-1 text-left truncate">{node.name}</span>
 
         {/* Count */}
-        <span className="text-xs text-ink-text-faint shrink-0">
+        <span className="text-[11px] tabular-nums text-ink-text-faint shrink-0">
           {node.noteCount}
         </span>
       </div>

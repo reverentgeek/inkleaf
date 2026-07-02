@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { FileText, Trash2 } from "lucide-react";
+import { Trash2 } from "lucide-react";
 import type { Note } from "../../api/client";
 import ConfirmDialog from "../ConfirmDialog";
 
@@ -8,6 +8,26 @@ interface NoteCardProps {
   isActive: boolean;
   onClick: () => void;
   onDelete: () => void;
+}
+
+// First body line of the note with Markdown syntax stripped; skips lines
+// that just repeat the title so the preview adds information.
+function getPreview(markdown: string | undefined, title: string): string {
+  if (!markdown) return "";
+  for (const raw of markdown.split("\n")) {
+    const line = raw.trim();
+    if (!line || line.startsWith("```") || line === "---") continue;
+    const text = line
+      .replace(/^#{1,6}\s+/, "")
+      .replace(/^(?:[-*+]|\d+\.)\s+/, "")
+      .replace(/^>\s*/, "")
+      .replace(/!?\[([^\]]*)\]\([^)]*\)/g, "$1")
+      .replace(/[*_`~]/g, "")
+      .trim();
+    if (!text || text === title.trim()) continue;
+    return text.slice(0, 120);
+  }
+  return "";
 }
 
 export default function NoteCard({
@@ -23,8 +43,7 @@ export default function NoteCard({
     setShowConfirm(true);
   };
 
-  const preview =
-    note.markdown?.split("\n").find((l) => l.trim())?.slice(0, 80) || "";
+  const preview = getPreview(note.markdown, note.title || "");
   const date = new Date(note.updatedAt).toLocaleDateString("en-US", {
     month: "short",
     day: "numeric",
@@ -37,41 +56,41 @@ export default function NoteCard({
         tabIndex={0}
         onClick={onClick}
         onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") onClick(); }}
-        className={`w-full text-left p-3 rounded-lg border transition-colors group cursor-pointer ${
-          isActive
-            ? "bg-ink-accent/10 border-ink-accent/30"
-            : "bg-transparent border-transparent hover:bg-ink-bg-secondary/50"
+        className={`relative group w-full text-left pl-3 pr-2 py-1.5 rounded-md cursor-pointer transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ink-accent/60 ${
+          isActive ? "bg-ink-accent/10" : "hover:bg-ink-bg-secondary/60"
         }`}
       >
-        <div className="flex items-start justify-between gap-2">
-          <div className="flex items-center gap-2 min-w-0">
-            <FileText
-              size={14}
-              className="flex-shrink-0 text-ink-text-faint"
-            />
-            <span className="font-medium text-sm truncate">
-              {note.title || "Untitled"}
-            </span>
-          </div>
-          <button
-            onClick={handleDeleteClick}
-            className="opacity-0 group-hover:opacity-100 p-1 hover:text-ink-danger-light transition-opacity"
+        <span
+          aria-hidden
+          className={`absolute left-0 top-2 bottom-2 w-0.5 rounded-full transition-colors ${
+            isActive ? "bg-ink-accent" : "bg-transparent"
+          }`}
+        />
+        <div className="flex items-baseline gap-2">
+          <span
+            className={`flex-1 min-w-0 truncate text-[13px] font-medium ${
+              isActive ? "text-ink-text-primary" : "text-ink-text-secondary"
+            }`}
           >
-            <Trash2 size={12} />
-          </button>
-        </div>
-        <p className="text-xs text-ink-text-faint mt-1 truncate">{preview}</p>
-        <div className="flex items-center gap-2 mt-2">
-          <span className="text-xs text-ink-text-placeholder">{date}</span>
-          {note.tags?.slice(0, 3).map((tag) => (
-            <span
-              key={tag}
-              className="text-xs px-1.5 py-0.5 rounded bg-ink-bg-secondary text-ink-text-muted"
-            >
-              {tag}
+            {note.title || "Untitled"}
+          </span>
+          {/* Date swaps out for the delete button on hover — same slot, no layout shift */}
+          <span className="relative shrink-0 flex items-baseline justify-end min-w-10">
+            <span className="text-[11px] tabular-nums text-ink-text-faint transition-opacity group-hover:opacity-0">
+              {date}
             </span>
-          ))}
+            <button
+              onClick={handleDeleteClick}
+              className="absolute -right-0.5 -top-0.5 p-0.5 rounded opacity-0 group-hover:opacity-100 focus-visible:opacity-100 text-ink-text-faint hover:text-ink-danger-light transition-opacity"
+              title="Delete note"
+            >
+              <Trash2 size={13} />
+            </button>
+          </span>
         </div>
+        {preview && (
+          <p className="mt-px truncate text-xs text-ink-text-faint">{preview}</p>
+        )}
       </div>
       <ConfirmDialog
         open={showConfirm}

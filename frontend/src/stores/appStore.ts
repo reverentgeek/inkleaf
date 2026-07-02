@@ -28,6 +28,8 @@ interface AppState {
   setActiveTag: (tag: string | null) => void;
   expandedTagPaths: string[];
   toggleTagExpanded: (path: string) => void;
+  tagsSectionOpen: boolean;
+  toggleTagsSection: () => void;
 
   // Sync status (null until the first poll completes)
   syncStatus: SyncStatus | null;
@@ -69,6 +71,13 @@ export const useAppStore = create<AppState>((set) => ({
         : [...s.expandedTagPaths, path];
       localStorage.setItem("inkleaf-expanded-tags", JSON.stringify(next));
       return { expandedTagPaths: next };
+    }),
+  tagsSectionOpen: localStorage.getItem("inkleaf-tags-open") !== "false",
+  toggleTagsSection: () =>
+    set((s) => {
+      const next = !s.tagsSectionOpen;
+      localStorage.setItem("inkleaf-tags-open", String(next));
+      return { tagsSectionOpen: next };
     }),
 
   syncStatus: null,
