@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import NoteCard from "./NoteCard";
 import type { Note } from "../../api/client";
 
@@ -10,6 +11,20 @@ interface NoteListProps {
   onClearFilter?: () => void;
 }
 
+// Notes arrive sorted by updatedAt desc, so consecutive labels form groups.
+function groupLabel(dateStr: string): string {
+  const startOfDay = (d: Date) =>
+    new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+  const days = Math.round(
+    (startOfDay(new Date()) - startOfDay(new Date(dateStr))) / 86400000,
+  );
+  if (days <= 0) return "Today";
+  if (days === 1) return "Yesterday";
+  if (days < 7) return "This week";
+  if (days < 31) return "This month";
+  return "Earlier";
+}
+
 export default function NoteList({
   notes,
   activeNoteId,
@@ -18,6 +33,25 @@ export default function NoteList({
   onDelete,
   onClearFilter,
 }: NoteListProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key !== "ArrowDown" && e.key !== "ArrowUp") return;
+    e.preventDefault();
+    const idx = notes.findIndex((n) => n._id === activeNoteId);
+    const next =
+      e.key === "ArrowDown"
+        ? Math.min(idx + 1, notes.length - 1)
+        : Math.max(idx - 1, 0);
+    const note = notes[next];
+    if (!note || note._id === activeNoteId) return;
+    onSelect(note._id);
+    const row =
+      containerRef.current?.querySelectorAll<HTMLElement>("[data-note-row]")[next];
+    row?.focus();
+    row?.scrollIntoView({ block: "nearest" });
+  };
+
   if (notes.length === 0) {
     return (
       <div className="px-4 py-6 text-center text-xs text-ink-text-faint">
@@ -40,17 +74,34 @@ export default function NoteList({
     );
   }
 
+  let prevLabel: string | null = null;
+
   return (
-    <div className="flex flex-col gap-px px-1.5 py-1">
-      {notes.map((note) => (
-        <NoteCard
-          key={note._id}
-          note={note}
-          isActive={note._id === activeNoteId}
-          onClick={() => onSelect(note._id)}
-          onDelete={() => onDelete(note._id)}
-        />
-      ))}
+    <div
+      ref={containerRef}
+      onKeyDown={handleKeyDown}
+      className="flex flex-col gap-px px-1.5 py-1"
+    >
+      {notes.map((note) => {
+        const label = groupLabel(note.updatedAt);
+        const showLabel = label !== prevLabel;
+        prevLabel = label;
+        return (
+          <div key={note._id} className="flex flex-col gap-px">
+            {showLabel && (
+              <div className="px-1.5 pt-2 pb-0.5 text-[10px] font-semibold uppercase tracking-wider text-ink-text-faint">
+                {label}
+              </div>
+            )}
+            <NoteCard
+              note={note}
+              isActive={note._id === activeNoteId}
+              onClick={() => onSelect(note._id)}
+              onDelete={() => onDelete(note._id)}
+            />
+          </div>
+        );
+      })}
     </div>
   );
 }

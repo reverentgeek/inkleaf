@@ -3,7 +3,7 @@ import Layout from "./components/layout/Layout";
 import { useAppStore } from "./stores/appStore";
 
 export default function App() {
-  const { setCommandPaletteOpen, openCommandPalette, setViewMode, theme, toggleTheme } = useAppStore();
+  const { setCommandPaletteOpen, openCommandPalette, setViewMode, theme, toggleTheme, setSidebarOpen } = useAppStore();
 
   // Sync theme class to <html>
   useEffect(() => {
@@ -39,6 +39,13 @@ export default function App() {
         return;
       }
 
+      // Cmd+\: Toggle sidebar
+      if (isMod && e.key === "\\") {
+        e.preventDefault();
+        setSidebarOpen(!useAppStore.getState().sidebarOpen);
+        return;
+      }
+
       // Escape: Close command palette
       if (e.key === "Escape") {
         setCommandPaletteOpen(false);
@@ -47,7 +54,7 @@ export default function App() {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [setCommandPaletteOpen, openCommandPalette, setViewMode, toggleTheme]);
+  }, [setCommandPaletteOpen, openCommandPalette, setViewMode, toggleTheme, setSidebarOpen]);
 
   return <Layout />;
 }

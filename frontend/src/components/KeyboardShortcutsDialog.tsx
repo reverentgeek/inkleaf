@@ -10,11 +10,14 @@ const mod = isMac ? "\u2318" : "Ctrl+";
 const shift = isMac ? "\u21E7" : "Shift+";
 
 const shortcuts = [
+  { keys: `${mod}N`, description: "New note" },
   { keys: `${mod}K`, description: "Search (text)" },
   { keys: `${mod}${shift}K`, description: "Search (semantic)" },
   { keys: `${mod}E`, description: "Edit mode" },
   { keys: `${mod}${shift}E`, description: "Preview mode" },
   { keys: `${mod}${shift}T`, description: "Toggle theme" },
+  { keys: `${mod}\\`, description: "Toggle sidebar" },
+  { keys: "↑ ↓", description: "Previous / next note in list" },
   { keys: `${mod}${shift}F`, description: "Format markdown" },
   { keys: `${mod}O`, description: "Import Markdown file" },
   { keys: `${mod}S`, description: "Export note as Markdown" },

@@ -30,6 +30,23 @@ function getPreview(markdown: string | undefined, title: string): string {
   return "";
 }
 
+// Relative time for today's notes, calendar date otherwise.
+function formatDate(dateStr: string): string {
+  const d = new Date(dateStr);
+  const now = new Date();
+  if (d.toDateString() === now.toDateString()) {
+    const mins = Math.max(0, Math.floor((now.getTime() - d.getTime()) / 60000));
+    if (mins < 1) return "now";
+    if (mins < 60) return `${mins}m`;
+    return `${Math.floor(mins / 60)}h`;
+  }
+  return d.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    ...(d.getFullYear() !== now.getFullYear() && { year: "numeric" }),
+  });
+}
+
 export default function NoteCard({
   note,
   isActive,
@@ -44,16 +61,14 @@ export default function NoteCard({
   };
 
   const preview = getPreview(note.markdown, note.title || "");
-  const date = new Date(note.updatedAt).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-  });
+  const date = formatDate(note.updatedAt);
 
   return (
     <>
       <div
         role="button"
         tabIndex={0}
+        data-note-row
         onClick={onClick}
         onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") onClick(); }}
         className={`relative group w-full text-left pl-3 pr-2 py-1.5 rounded-md cursor-pointer transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ink-accent/60 ${

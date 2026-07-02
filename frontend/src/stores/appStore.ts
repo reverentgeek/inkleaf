@@ -39,8 +39,12 @@ interface AppState {
 export const useAppStore = create<AppState>((set) => ({
   notes: [],
   setNotes: (notes) => set({ notes }),
-  activeNoteId: null,
-  setActiveNoteId: (id) => set({ activeNoteId: id }),
+  activeNoteId: localStorage.getItem("inkleaf-active-note"),
+  setActiveNoteId: (id) => {
+    if (id) localStorage.setItem("inkleaf-active-note", id);
+    else localStorage.removeItem("inkleaf-active-note");
+    set({ activeNoteId: id });
+  },
 
   theme: (localStorage.getItem("inkleaf-theme") as Theme) || "dark",
   toggleTheme: () =>
@@ -61,8 +65,13 @@ export const useAppStore = create<AppState>((set) => ({
   viewMode: "edit",
   setViewMode: (mode) => set({ viewMode: mode }),
 
-  activeTag: null,
-  setActiveTag: (tag) => set({ activeTag: tag, activeNoteId: null }),
+  activeTag: localStorage.getItem("inkleaf-active-tag"),
+  setActiveTag: (tag) => {
+    if (tag) localStorage.setItem("inkleaf-active-tag", tag);
+    else localStorage.removeItem("inkleaf-active-tag");
+    localStorage.removeItem("inkleaf-active-note");
+    set({ activeTag: tag, activeNoteId: null });
+  },
   expandedTagPaths: JSON.parse(localStorage.getItem("inkleaf-expanded-tags") || "[]"),
   toggleTagExpanded: (path) =>
     set((s) => {

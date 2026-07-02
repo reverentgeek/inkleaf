@@ -90,9 +90,12 @@ _id, title, markdown, tags[], notebookId, createdAt, updatedAt, embedding[] (153
 
 | Shortcut | Action |
 |----------|--------|
+| Cmd+N | Create a new note (focuses the title input) |
 | Cmd+K | Open command palette (text search) |
 | Cmd+Shift+K | Open command palette (semantic search) |
 | Cmd+Shift+T | Toggle light/dark theme |
+| Cmd+\ | Toggle sidebar |
+| ↑ / ↓ | Previous / next note when the note list is focused |
 | Cmd+O | Import a Markdown file as a new note (desktop menu accelerator) |
 | Cmd+S | Export the active note as a Markdown file (desktop menu accelerator) |
 | Escape | Close command palette |

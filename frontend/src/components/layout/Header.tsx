@@ -59,6 +59,7 @@ export default function Header({
       <div className="flex items-center gap-3">
         <button
           onClick={onToggleSidebar}
+          title={`Toggle sidebar (${mod}\\)`}
           className="p-1.5 rounded hover:bg-ink-bg-secondary text-ink-text-muted hover:text-ink-text-tertiary transition-colors"
         >
           {sidebarOpen ? <PanelLeftClose size={16} /> : <PanelLeft size={16} />}

@@ -44,22 +44,51 @@ export default function Layout() {
   useSyncStatus();
 
   const editorRef = useRef<MarkdownEditorHandle>(null);
+  const titleInputRef = useRef<HTMLInputElement>(null);
+  const focusTitleOnNextNoteRef = useRef(false);
 
   const handleFormat = useCallback(() => {
     editorRef.current?.format();
   }, []);
 
-  // Cmd+Shift+F: Format markdown
+  const handleCreateNote = useCallback(() => {
+    focusTitleOnNextNoteRef.current = true;
+    createNote();
+  }, [createNote]);
+
+  // Cmd+Shift+F: Format markdown; Cmd+N: New note
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === "f") {
+      const isMod = e.metaKey || e.ctrlKey;
+      if (isMod && e.shiftKey && e.key.toLowerCase() === "f") {
         e.preventDefault();
         handleFormat();
+      }
+      if (isMod && !e.shiftKey && e.key.toLowerCase() === "n") {
+        e.preventDefault();
+        handleCreateNote();
       }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [handleFormat]);
+  }, [handleFormat, handleCreateNote]);
+
+  // A restored activeNoteId may point at a note deleted elsewhere — clear it
+  // once notes have loaded.
+  useEffect(() => {
+    if (notes.length > 0 && activeNoteId && !notes.some((n) => n._id === activeNoteId)) {
+      setActiveNoteId(null);
+    }
+  }, [notes, activeNoteId, setActiveNoteId]);
+
+  // Focus the title after creating a note so typing replaces "Untitled".
+  useEffect(() => {
+    if (focusTitleOnNextNoteRef.current && activeNoteId) {
+      focusTitleOnNextNoteRef.current = false;
+      titleInputRef.current?.focus();
+      titleInputRef.current?.select();
+    }
+  }, [activeNoteId]);
 
   const currentNote = activeNote;
 
@@ -86,10 +115,6 @@ export default function Layout() {
     },
     [activeNoteId, updateNote],
   );
-
-  const handleCreateNote = useCallback(() => {
-    createNote();
-  }, [createNote]);
 
   const handleDeleteNote = useCallback(
     (id: string) => {
@@ -141,6 +166,7 @@ export default function Layout() {
               {/* Title input */}
               <div className="px-6 pt-4 pb-2">
                 <input
+                  ref={titleInputRef}
                   value={currentNote.title}
                   onChange={handleTitleChange}
                   placeholder="Note title"
