@@ -57,6 +57,17 @@ pnpm seed             # Seed 17 sample notes (+ embeddings if OPENAI_API_KEY set
 pnpm create-indexes   # Create Atlas Search + Vector Search indexes
 ```
 
+## Versioning
+
+The app version lives in **six** files that must be bumped together (they have drifted before):
+
+- `package.json` (root)
+- `frontend/package.json`
+- `backend/package.json`
+- `frontend/src-tauri/tauri.conf.json` — the version the desktop app reports
+- `frontend/src-tauri/Cargo.toml`
+- `frontend/src-tauri/Cargo.lock` — regenerate with `cargo update -p inkleaf` (run in `frontend/src-tauri/`), don't hand-edit
+
 ## Environment Variables (.env)
 
 | Variable | Required | Description |
