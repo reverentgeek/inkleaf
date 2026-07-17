@@ -9,6 +9,9 @@ interface NoteListProps {
   onSelect: (id: string) => void;
   onDelete: (id: string) => void;
   onClearFilter?: () => void;
+  trashMode?: boolean;
+  onRestore?: (id: string) => void;
+  emptyMessage?: string;
 }
 
 // Notes arrive sorted by updatedAt desc, so consecutive labels form groups.
@@ -32,6 +35,9 @@ export default function NoteList({
   onSelect,
   onDelete,
   onClearFilter,
+  trashMode = false,
+  onRestore,
+  emptyMessage,
 }: NoteListProps) {
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -68,7 +74,7 @@ export default function NoteList({
             )}
           </>
         ) : (
-          <p>No notes yet. Create one to get started.</p>
+          <p>{emptyMessage ?? "No notes yet. Create one to get started."}</p>
         )}
       </div>
     );
@@ -98,6 +104,8 @@ export default function NoteList({
               isActive={note._id === activeNoteId}
               onClick={() => onSelect(note._id)}
               onDelete={() => onDelete(note._id)}
+              trashMode={trashMode}
+              onRestore={onRestore ? () => onRestore(note._id) : undefined}
             />
           </div>
         );

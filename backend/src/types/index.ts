@@ -8,6 +8,7 @@ export interface Note {
   notebookId: string;
   createdAt: Date;
   updatedAt: Date;
+  deletedAt?: Date | null;
   embedding?: number[];
 }
 
@@ -21,6 +22,7 @@ export interface NoteDTO {
   notebookId: string;
   createdAt: string;
   updatedAt: string;
+  deletedAt?: string | null;
 }
 
 export interface SyncStatus {

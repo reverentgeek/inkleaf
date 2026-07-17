@@ -1,4 +1,4 @@
-import { useCallback, useRef, useEffect } from "react";
+import { useCallback, useRef, useEffect, useState } from "react";
 import Sidebar from "./Sidebar";
 import Header from "./Header";
 import MarkdownEditor from "../editor/MarkdownEditor";
@@ -7,11 +7,13 @@ import MarkdownPreview from "../editor/MarkdownPreview";
 import TagInput from "../tags/TagInput";
 import RelatedNotes from "../notes/RelatedNotes";
 import CommandPalette from "../search/CommandPalette";
+import Toast from "../Toast";
 import { useNotes } from "../../hooks/useNotes";
 import { useSyncStatus } from "../../hooks/useSyncStatus";
 import { useAppStore } from "../../stores/appStore";
-import { Eye, Edit3, WrapText } from "lucide-react";
+import { Eye, Edit3, WrapText, RotateCcw, Trash2 } from "lucide-react";
 import InkleafLogo from "../InkleafLogo";
+import ConfirmDialog from "../ConfirmDialog";
 
 export default function Layout() {
   const {
@@ -29,15 +31,21 @@ export default function Layout() {
     setActiveNoteId,
     viewMode,
     setViewMode,
+    sidebarView,
+    setSidebarView,
   } = useAppStore();
 
   const {
     notes,
+    trashNotes,
     filteredNotes,
     activeNote,
     createNote,
     updateNote,
     deleteNote,
+    restoreNote,
+    permanentDeleteNote,
+    emptyTrash,
   } = useNotes();
 
   // Single poller for Atlas connectivity — everything reads s.syncStatus.
@@ -73,13 +81,18 @@ export default function Layout() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [handleFormat, handleCreateNote]);
 
-  // A restored activeNoteId may point at a note deleted elsewhere — clear it
-  // once notes have loaded.
+  // A restored activeNoteId may point at a note permanently deleted elsewhere —
+  // clear it once loaded, but keep it if it lives in the trash (previewable).
   useEffect(() => {
-    if (notes.length > 0 && activeNoteId && !notes.some((n) => n._id === activeNoteId)) {
+    if (
+      notes.length > 0 &&
+      activeNoteId &&
+      !notes.some((n) => n._id === activeNoteId) &&
+      !trashNotes.some((n) => n._id === activeNoteId)
+    ) {
       setActiveNoteId(null);
     }
-  }, [notes, activeNoteId, setActiveNoteId]);
+  }, [notes, trashNotes, activeNoteId, setActiveNoteId]);
 
   // Focus the title after creating a note so typing replaces "Untitled".
   useEffect(() => {
@@ -130,6 +143,30 @@ export default function Layout() {
     [setActiveNoteId],
   );
 
+  const handleRestoreActive = useCallback(
+    (id: string) => {
+      restoreNote(id);
+      setSidebarView("notes"); // keep it selected; it's now editable again
+    },
+    [restoreNote, setSidebarView],
+  );
+
+  const handlePurgeActive = useCallback(
+    (id: string) => {
+      permanentDeleteNote(id);
+      setActiveNoteId(null);
+    },
+    [permanentDeleteNote, setActiveNoteId],
+  );
+
+  const isTrashed = !!currentNote?.deletedAt;
+  const [showPurgeConfirm, setShowPurgeConfirm] = useState(false);
+
+  const handleEmptyTrash = useCallback(() => {
+    emptyTrash();
+    if (isTrashed) setActiveNoteId(null);
+  }, [emptyTrash, isTrashed, setActiveNoteId]);
+
   return (
     <div className="flex h-screen overflow-hidden bg-ink-bg-primary">
       {/* Sidebar */}
@@ -137,11 +174,17 @@ export default function Layout() {
         <Sidebar
           notes={notes}
           filteredNotes={filteredNotes}
+          trashNotes={trashNotes}
+          sidebarView={sidebarView}
+          onSetView={setSidebarView}
           activeNoteId={activeNoteId}
           activeTag={activeTag}
           expandedTagPaths={expandedTagPaths}
           onSelectNote={setActiveNoteId}
           onDeleteNote={handleDeleteNote}
+          onRestoreNote={restoreNote}
+          onPurgeNote={permanentDeleteNote}
+          onEmptyTrash={handleEmptyTrash}
           onCreateNote={handleCreateNote}
           onSelectTag={setActiveTag}
           onToggleTagExpanded={toggleTagExpanded}
@@ -159,7 +202,55 @@ export default function Layout() {
           onOpenSearch={() => setCommandPaletteOpen(true)}
         />
 
-        {currentNote ? (
+        {currentNote && isTrashed ? (
+          /* Trashed note: read-only preview with restore / delete-forever */
+          <div className="flex-1 flex flex-col overflow-hidden">
+            <div className="flex items-center gap-3 px-6 py-2.5 border-b border-ink-border bg-ink-bg-secondary/40">
+              <Trash2 size={14} className="shrink-0 text-ink-text-faint" />
+              <span className="text-xs text-ink-text-muted">
+                In Trash
+                {currentNote.deletedAt &&
+                  ` — deleted ${new Date(currentNote.deletedAt).toLocaleString()}`}
+              </span>
+              <div className="ml-auto flex items-center gap-2">
+                <button
+                  onClick={() => handleRestoreActive(currentNote._id)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs text-ink-text-secondary hover:bg-ink-bg-secondary transition-colors"
+                >
+                  <RotateCcw size={13} />
+                  Restore
+                </button>
+                <button
+                  onClick={() => setShowPurgeConfirm(true)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs bg-ink-danger hover:bg-ink-danger-hover text-white transition-colors"
+                >
+                  <Trash2 size={13} />
+                  Delete forever
+                </button>
+              </div>
+            </div>
+            <div className="px-6 pt-4 pb-2">
+              <h1 className="text-2xl font-bold text-ink-text-primary">
+                {currentNote.title || "Untitled"}
+              </h1>
+            </div>
+            {currentNote.tags && currentNote.tags.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 px-6 pb-3">
+                {currentNote.tags.map((tag) => (
+                  <span
+                    key={tag}
+                    className="px-2 py-0.5 rounded-full bg-ink-bg-secondary text-[11px] text-ink-text-muted"
+                  >
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            )}
+            <div className="flex-1 overflow-hidden">
+              <MarkdownPreview content={currentNote.markdown || ""} />
+            </div>
+          </div>
+        ) : currentNote ? (
           <div className="flex-1 flex overflow-hidden">
             {/* Editor area */}
             <div className="flex-1 flex flex-col min-w-0">
@@ -273,6 +364,21 @@ export default function Layout() {
         open={commandPaletteOpen}
         onClose={() => setCommandPaletteOpen(false)}
         onSelectNote={handleSelectFromSearch}
+      />
+
+      {/* Undo / status toast */}
+      <Toast />
+
+      <ConfirmDialog
+        open={showPurgeConfirm}
+        title="Delete forever"
+        message={`Permanently delete "${currentNote?.title || "Untitled"}"? This cannot be undone.`}
+        confirmLabel="Delete forever"
+        onConfirm={() => {
+          setShowPurgeConfirm(false);
+          if (currentNote) handlePurgeActive(currentNote._id);
+        }}
+        onCancel={() => setShowPurgeConfirm(false)}
       />
     </div>
   );

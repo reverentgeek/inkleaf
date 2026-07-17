@@ -20,6 +20,8 @@ export interface Note {
   notebookId: string;
   createdAt: string;
   updatedAt: string;
+  // Set (ISO string) while the note is in the trash; null/absent when active.
+  deletedAt?: string | null;
 }
 
 export interface SearchHighlight {
@@ -81,6 +83,17 @@ export const api = {
       }),
     delete: (id: string) =>
       request<{ success: boolean }>(`/notes/${id}`, { method: "DELETE" }),
+    trash: () => request<Note[]>("/notes/trash"),
+    emptyTrash: () =>
+      request<{ success: boolean; purged: number }>("/notes/trash", {
+        method: "DELETE",
+      }),
+    restore: (id: string) =>
+      request<Note>(`/notes/${id}/restore`, { method: "POST" }),
+    permanentDelete: (id: string) =>
+      request<{ success: boolean }>(`/notes/${id}/permanent`, {
+        method: "DELETE",
+      }),
   },
 
   search: {

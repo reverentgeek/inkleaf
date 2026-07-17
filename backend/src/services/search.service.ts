@@ -57,6 +57,9 @@ async function atlasSearch(
         },
       },
     },
+    // Exclude trashed notes (soft-deleted docs remain in Atlas with deletedAt
+    // set; `null` also matches docs that never had the field).
+    { $match: { deletedAt: null } },
     {
       $project: {
         title: 1,
@@ -102,6 +105,7 @@ async function atlasAutocomplete(
         },
       },
     },
+    { $match: { deletedAt: null } },
     {
       $project: {
         title: 1,

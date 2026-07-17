@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Trash2 } from "lucide-react";
+import { Trash2, RotateCcw } from "lucide-react";
 import type { Note } from "../../api/client";
 import ConfirmDialog from "../ConfirmDialog";
 
@@ -7,7 +7,11 @@ interface NoteCardProps {
   note: Note;
   isActive: boolean;
   onClick: () => void;
+  // Normal mode: soft-delete (recoverable via toast/trash).
   onDelete: () => void;
+  // Trash mode: show Restore + Delete-forever instead of the trash button.
+  trashMode?: boolean;
+  onRestore?: () => void;
 }
 
 // First body line of the note with Markdown syntax stripped; skips lines
@@ -52,10 +56,23 @@ export default function NoteCard({
   isActive,
   onClick,
   onDelete,
+  trashMode = false,
+  onRestore,
 }: NoteCardProps) {
   const [showConfirm, setShowConfirm] = useState(false);
 
   const handleDeleteClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    // Soft delete is recoverable (undo toast + trash), so no confirmation.
+    onDelete();
+  };
+
+  const handleRestoreClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onRestore?.();
+  };
+
+  const handlePurgeClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     setShowConfirm(true);
   };
@@ -89,18 +106,37 @@ export default function NoteCard({
           >
             {note.title || "Untitled"}
           </span>
-          {/* Date swaps out for the delete button on hover — same slot, no layout shift */}
+          {/* Date swaps out for hover actions — same slot, no layout shift */}
           <span className="relative shrink-0 flex items-baseline justify-end min-w-10">
             <span className="text-[11px] tabular-nums text-ink-text-faint transition-opacity group-hover:opacity-0">
               {date}
             </span>
-            <button
-              onClick={handleDeleteClick}
-              className="absolute -right-0.5 -top-0.5 p-0.5 rounded opacity-0 group-hover:opacity-100 focus-visible:opacity-100 text-ink-text-faint hover:text-ink-danger-light transition-opacity"
-              title="Delete note"
-            >
-              <Trash2 size={13} />
-            </button>
+            {trashMode ? (
+              <span className="absolute -right-0.5 -top-0.5 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
+                <button
+                  onClick={handleRestoreClick}
+                  className="p-0.5 rounded text-ink-text-faint hover:text-ink-accent-lighter transition-colors"
+                  title="Restore note"
+                >
+                  <RotateCcw size={13} />
+                </button>
+                <button
+                  onClick={handlePurgeClick}
+                  className="p-0.5 rounded text-ink-text-faint hover:text-ink-danger-light transition-colors"
+                  title="Delete forever"
+                >
+                  <Trash2 size={13} />
+                </button>
+              </span>
+            ) : (
+              <button
+                onClick={handleDeleteClick}
+                className="absolute -right-0.5 -top-0.5 p-0.5 rounded opacity-0 group-hover:opacity-100 focus-visible:opacity-100 text-ink-text-faint hover:text-ink-danger-light transition-opacity"
+                title="Move to trash"
+              >
+                <Trash2 size={13} />
+              </button>
+            )}
           </span>
         </div>
         {preview && (
@@ -109,8 +145,9 @@ export default function NoteCard({
       </div>
       <ConfirmDialog
         open={showConfirm}
-        title="Delete note"
-        message={`Are you sure you want to delete "${note.title || "Untitled"}"? This cannot be undone.`}
+        title="Delete forever"
+        message={`Permanently delete "${note.title || "Untitled"}"? This cannot be undone.`}
+        confirmLabel="Delete forever"
         onConfirm={() => {
           setShowConfirm(false);
           onDelete();

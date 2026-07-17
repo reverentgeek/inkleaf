@@ -3,12 +3,30 @@ import type { Note, SyncStatus } from "../api/client";
 
 type Theme = "light" | "dark";
 
+export interface Toast {
+  id: number;
+  message: string;
+  actionLabel?: string;
+  onAction?: () => void;
+}
+
 interface AppState {
   // Notes
   notes: Note[];
   setNotes: (notes: Note[]) => void;
+  trashNotes: Note[];
+  setTrashNotes: (notes: Note[]) => void;
   activeNoteId: string | null;
   setActiveNoteId: (id: string | null) => void;
+
+  // Sidebar view: active notes vs. trash
+  sidebarView: "notes" | "trash";
+  setSidebarView: (view: "notes" | "trash") => void;
+
+  // Transient toast (e.g. undo after delete)
+  toast: Toast | null;
+  showToast: (toast: Omit<Toast, "id">) => void;
+  dismissToast: () => void;
 
   // UI
   theme: Theme;
@@ -39,6 +57,16 @@ interface AppState {
 export const useAppStore = create<AppState>((set) => ({
   notes: [],
   setNotes: (notes) => set({ notes }),
+  trashNotes: [],
+  setTrashNotes: (trashNotes) => set({ trashNotes }),
+
+  sidebarView: "notes",
+  setSidebarView: (sidebarView) => set({ sidebarView }),
+
+  toast: null,
+  showToast: (toast) => set({ toast: { ...toast, id: Date.now() } }),
+  dismissToast: () => set({ toast: null }),
+
   activeNoteId: localStorage.getItem("inkleaf-active-note"),
   setActiveNoteId: (id) => {
     if (id) localStorage.setItem("inkleaf-active-note", id);

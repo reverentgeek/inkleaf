@@ -20,6 +20,8 @@ export async function semanticSearch(query: string): Promise<SemanticResult[]> {
         limit: 10,
       },
     },
+    // Drop trashed notes (kept in Atlas with deletedAt set until purged).
+    { $match: { deletedAt: null } },
     {
       $project: {
         title: 1,
@@ -71,6 +73,7 @@ export async function findRelatedNotes(
     {
       $match: {
         _id: { $ne: new ObjectId(noteId) },
+        deletedAt: null,
       },
     },
     {

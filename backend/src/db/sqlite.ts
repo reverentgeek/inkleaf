@@ -20,8 +20,10 @@ CREATE TABLE IF NOT EXISTS notes (
   notebook_id TEXT NOT NULL DEFAULT 'default',
   created_at  INTEGER NOT NULL,            -- epoch ms
   updated_at  INTEGER NOT NULL,            -- epoch ms (last-write-wins key)
-  deleted     INTEGER NOT NULL DEFAULT 0,  -- tombstone awaiting remote delete
+  deleted     INTEGER NOT NULL DEFAULT 0,  -- 1 = trashed (recoverable), hidden from reads
+  deleted_at  INTEGER,                     -- epoch ms the note was trashed (NULL when active)
   dirty       INTEGER NOT NULL DEFAULT 0,  -- local change awaiting push
+  purge_pending INTEGER NOT NULL DEFAULT 0, -- 1 = permanent delete awaiting remote removal
   embedding_pending INTEGER NOT NULL DEFAULT 0
 );
 CREATE INDEX IF NOT EXISTS idx_notes_updated ON notes(updated_at DESC);
@@ -57,8 +59,30 @@ export function getSqlite(): DatabaseSync {
   mkdirSync(dirname(config.sqlitePath), { recursive: true });
   db = new DatabaseSync(config.sqlitePath);
   db.exec(SCHEMA);
+  migrate(db);
   console.log(`Local SQLite store ready at ${config.sqlitePath}`);
   return db;
+}
+
+// Additive schema migrations for stores created before a column existed.
+// CREATE TABLE IF NOT EXISTS won't add columns to an existing table, so we
+// add them here, guarded by a table_info check (idempotent).
+function migrate(database: DatabaseSync): void {
+  const cols = new Set(
+    (
+      database.prepare("PRAGMA table_info(notes)").all() as unknown as {
+        name: string;
+      }[]
+    ).map((c) => c.name),
+  );
+  if (!cols.has("deleted_at")) {
+    database.exec("ALTER TABLE notes ADD COLUMN deleted_at INTEGER");
+  }
+  if (!cols.has("purge_pending")) {
+    database.exec(
+      "ALTER TABLE notes ADD COLUMN purge_pending INTEGER NOT NULL DEFAULT 0",
+    );
+  }
 }
 
 export function closeSqlite(): void {
@@ -77,7 +101,9 @@ export interface NoteRow {
   created_at: number;
   updated_at: number;
   deleted: number;
+  deleted_at: number | null;
   dirty: number;
+  purge_pending: number;
   embedding_pending: number;
 }
 
@@ -92,6 +118,7 @@ export function rowToNote(row: NoteRow): NoteDTO {
     notebookId: row.notebook_id,
     createdAt: new Date(row.created_at).toISOString(),
     updatedAt: new Date(row.updated_at).toISOString(),
+    deletedAt: row.deleted_at ? new Date(row.deleted_at).toISOString() : null,
   };
 }
 

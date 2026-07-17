@@ -10,6 +10,16 @@ router.get("/", async (req: Request, res: Response) => {
   res.json(notes);
 });
 
+router.get("/trash", async (_req: Request, res: Response) => {
+  const notes = await notesService.listTrash();
+  res.json(notes);
+});
+
+router.delete("/trash", async (_req: Request, res: Response) => {
+  const purged = await notesService.emptyTrash();
+  res.json({ success: true, purged });
+});
+
 router.get("/:id", async (req: Request, res: Response) => {
   const note = await notesService.getNoteById(req.params.id as string);
   if (!note) {
@@ -37,6 +47,24 @@ router.delete("/:id", async (req: Request, res: Response) => {
   const deleted = await notesService.deleteNote(req.params.id as string);
   if (!deleted) {
     res.status(404).json({ error: "Note not found" });
+    return;
+  }
+  res.json({ success: true });
+});
+
+router.post("/:id/restore", async (req: Request, res: Response) => {
+  const note = await notesService.restoreNote(req.params.id as string);
+  if (!note) {
+    res.status(404).json({ error: "Note not found in trash" });
+    return;
+  }
+  res.json(note);
+});
+
+router.delete("/:id/permanent", async (req: Request, res: Response) => {
+  const purged = await notesService.purgeNote(req.params.id as string);
+  if (!purged) {
+    res.status(404).json({ error: "Note not found in trash" });
     return;
   }
   res.json({ success: true });

@@ -152,13 +152,33 @@ async function pushDirtyNotes(collection: Collection<Note>): Promise<void> {
   for (const row of rows) {
     const _id = new ObjectId(row.id);
     try {
-      if (row.deleted) {
-        // Tombstone: delete remotely, then purge the local row
+      if (row.purge_pending) {
+        // Permanent delete: remove remotely, then hard-delete the local row
         // (the FTS trigger cleans up the search index).
         await collection.deleteOne({ _id });
         sqlite
-          .prepare("DELETE FROM notes WHERE id = ? AND deleted = 1")
+          .prepare("DELETE FROM notes WHERE id = ? AND purge_pending = 1")
           .run(row.id);
+        continue;
+      }
+
+      if (row.deleted) {
+        // Soft delete: keep the Atlas doc but stamp deletedAt so search
+        // excludes it and other devices see the trash state. $set (never
+        // replace) preserves the embedding field.
+        await collection.updateOne(
+          { _id },
+          {
+            $set: {
+              deletedAt: row.deleted_at ? new Date(row.deleted_at) : new Date(),
+              updatedAt: new Date(row.updated_at),
+            },
+          },
+          { upsert: true },
+        );
+        sqlite
+          .prepare("UPDATE notes SET dirty = 0 WHERE id = ? AND updated_at = ?")
+          .run(row.id, row.updated_at);
         continue;
       }
 
@@ -189,6 +209,8 @@ async function pushDirtyNotes(collection: Collection<Note>): Promise<void> {
             notebookId: row.notebook_id,
             createdAt: new Date(row.created_at),
             updatedAt: new Date(row.updated_at),
+            // Clear any prior trash marker (covers restore from trash).
+            deletedAt: null,
           },
         },
         { upsert: true },
@@ -287,8 +309,9 @@ async function pullRemoteChanges(collection: Collection<Note>): Promise<number> 
     pulled.push(...extra);
   }
 
-  // Clean local rows that vanished remotely were deleted on the server.
-  // Dirty rows are skipped — they're local changes awaiting push.
+  // Local rows that vanished remotely were *permanently* deleted on the server
+  // (soft-deleted notes still exist in Atlas, carrying a deletedAt marker), so
+  // hard-delete them locally. Dirty rows are skipped — local changes awaiting push.
   let applied = 0;
 
   const deleteStmt = sqlite.prepare(
@@ -301,8 +324,8 @@ async function pullRemoteChanges(collection: Collection<Note>): Promise<number> 
   }
 
   const upsertStmt = sqlite.prepare(
-    `INSERT INTO notes (id, title, markdown, tags, notebook_id, created_at, updated_at, deleted, dirty, embedding_pending)
-     VALUES (?, ?, ?, ?, ?, ?, ?, 0, 0, 0)
+    `INSERT INTO notes (id, title, markdown, tags, notebook_id, created_at, updated_at, deleted, deleted_at, dirty, purge_pending, embedding_pending)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0, 0)
      ON CONFLICT(id) DO UPDATE SET
        title = excluded.title,
        markdown = excluded.markdown,
@@ -310,7 +333,9 @@ async function pullRemoteChanges(collection: Collection<Note>): Promise<number> 
        notebook_id = excluded.notebook_id,
        created_at = excluded.created_at,
        updated_at = excluded.updated_at,
-       deleted = 0, dirty = 0, embedding_pending = 0`,
+       deleted = excluded.deleted,
+       deleted_at = excluded.deleted_at,
+       dirty = 0, purge_pending = 0, embedding_pending = 0`,
   );
 
   let maxUpdated = checkpoint;
@@ -328,6 +353,9 @@ async function pullRemoteChanges(collection: Collection<Note>): Promise<number> 
     }
 
     applied++;
+    const deletedAtMs = doc.deletedAt
+      ? new Date(doc.deletedAt).getTime()
+      : null;
     upsertStmt.run(
       id,
       doc.title ?? "",
@@ -336,6 +364,8 @@ async function pullRemoteChanges(collection: Collection<Note>): Promise<number> 
       doc.notebookId ?? "default",
       new Date(doc.createdAt).getTime(),
       remoteUpdated,
+      deletedAtMs ? 1 : 0,
+      deletedAtMs,
     );
   }
 
