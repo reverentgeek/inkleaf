@@ -1,11 +1,18 @@
 import { MongoClient } from "mongodb";
-import { resolve } from "path";
-import dotenv from "dotenv";
+import { config } from "../src/config.js";
+import {
+  generateEmbedding,
+  prepareTextForEmbedding,
+} from "../src/services/embeddings.js";
 
-dotenv.config({ path: resolve(import.meta.dirname, "../../.env") });
-
-const uri = process.env.MONGODB_URI!;
+const uri = config.mongodbUri;
 const dbName = "inkleaf";
+
+// True when the configured embedding provider has an API key available.
+const embeddingKeyConfigured =
+  config.embeddingProvider === "voyage"
+    ? Boolean(config.voyageApiKey)
+    : Boolean(config.openaiApiKey);
 
 const sampleNotes = [
   {
@@ -981,32 +988,32 @@ async function main() {
     const result = await db.collection("notes").insertMany(notesWithDates);
     console.log(`Inserted ${result.insertedCount} sample notes`);
 
-    // Generate embeddings if OpenAI key is available
-    if (process.env.OPENAI_API_KEY) {
-      console.log("\nGenerating embeddings (this may take a moment)...");
-      const { default: OpenAI } = await import("openai");
-      const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+    // Generate embeddings if the configured provider's key is available
+    if (embeddingKeyConfigured) {
+      console.log(
+        `\nGenerating embeddings via ${config.embeddingProvider} ` +
+          `(${config.embeddingModel}) — this may take a moment...`,
+      );
 
       const ids = Object.values(result.insertedIds);
       for (let i = 0; i < notesWithDates.length; i++) {
         const note = notesWithDates[i];
-        const text = [note.title, note.markdown, note.tags.join(", ")]
-          .filter(Boolean)
-          .join("\n\n")
-          .slice(0, 8000);
+        const text = prepareTextForEmbedding(
+          note.title,
+          note.markdown,
+          note.tags,
+        );
 
         try {
-          const response = await openai.embeddings.create({
-            model: "text-embedding-3-small",
-            input: text,
-          });
+          const embedding = await generateEmbedding(text, "document");
+          if (!embedding) {
+            console.error(`  ✗ No embedding returned: ${note.title}`);
+            continue;
+          }
 
           await db
             .collection("notes")
-            .updateOne(
-              { _id: ids[i] },
-              { $set: { embedding: response.data[0].embedding } },
-            );
+            .updateOne({ _id: ids[i] }, { $set: { embedding } });
 
           process.stdout.write(`  ✓ ${note.title}\n`);
         } catch (err) {
@@ -1015,9 +1022,11 @@ async function main() {
       }
       console.log("Embeddings generated!");
     } else {
-      console.log(
-        "\nSkipping embedding generation (OPENAI_API_KEY not set)",
-      );
+      const keyName =
+        config.embeddingProvider === "voyage"
+          ? "VOYAGE_API_KEY"
+          : "OPENAI_API_KEY";
+      console.log(`\nSkipping embedding generation (${keyName} not set)`);
     }
 
     console.log("\nSeed complete!");

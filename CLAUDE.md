@@ -55,6 +55,7 @@ pnpm dev:tauri        # Backend + Tauri desktop window
 pnpm build            # TypeScript compile + Vite production build
 pnpm seed             # Seed 17 sample notes (+ embeddings if OPENAI_API_KEY set); destructive — refuses if notes exist unless --force
 pnpm create-indexes   # Create Atlas Search + Vector Search indexes
+pnpm reembed          # Re-embed all notes with the configured provider; rebuilds the vector index if dimensions changed (use after switching EMBEDDING_PROVIDER). --keep-index to skip the index rebuild
 ```
 
 ## Versioning
@@ -73,7 +74,11 @@ The app version lives in **six** files that must be bumped together (they have d
 | Variable | Required | Description |
 |----------|----------|-------------|
 | `MONGODB_URI` | Yes | Atlas connection string |
-| `OPENAI_API_KEY` | For Vector Search | OpenAI API key (needs `text-embedding-3-small` access) |
+| `EMBEDDING_PROVIDER` | No (default `voyage`) | Embedding backend: `voyage` (MongoDB's Voyage AI) or `openai` |
+| `VOYAGE_API_KEY` | For Vector Search (voyage provider) | Voyage AI key; used against `https://ai.mongodb.com/v1/embeddings` |
+| `OPENAI_API_KEY` | For Vector Search (openai provider) | OpenAI API key (needs `text-embedding-3-small` access) |
+| `EMBEDDING_MODEL` | No | Override the model. Defaults: `voyage-4-lite` (voyage), `text-embedding-3-small` (openai) |
+| `EMBEDDING_DIMENSIONS` | No | Override vector dimensions. Defaults: 1024 (voyage), 1536 (openai). Must match the model and the Atlas vector index |
 | `PORT` | No (default 3001) | Backend port |
 | `MONGODB_DB` | No (default `inkleaf`) | Database name |
 | `SQLITE_PATH` | No (default `backend/data/inkleaf.db`) | Local offline store location |
@@ -89,13 +94,13 @@ The app version lives in **six** files that must be bumped together (they have d
 
 ### `notes` collection
 ```
-_id, title, markdown, tags[], notebookId, createdAt, updatedAt, embedding[] (1536 dims)
+_id, title, markdown, tags[], notebookId, createdAt, updatedAt, embedding[] (1536 dims for openai / 1024 for voyage)
 ```
 
 ## Atlas Indexes
 
 - **`notes_search_index`** (Atlas Search): title (string + autocomplete edgeGram), markdown (string), tags (keyword + token)
-- **`notes_vector_index`** (Vector Search): embedding field, 1536 dimensions, cosine similarity
+- **`notes_vector_index`** (Vector Search): embedding field, `config.embeddingDimensions` dimensions (1536 openai / 1024 voyage), cosine similarity
 
 ## Keyboard Shortcuts
 
@@ -128,6 +133,8 @@ _id, title, markdown, tags[], notebookId, createdAt, updatedAt, embedding[] (153
 ### Backend
 - Uses `.js` extensions in all imports (NodeNext module resolution)
 - Embedding generation is queued via the `embedding_pending` flag in SQLite and performed by the sync engine after content is pushed (works across offline periods)
+- **Embedding provider** is pluggable in `services/embeddings.ts` behind `generateEmbedding(text, inputType)`. `EMBEDDING_PROVIDER=openai` uses the OpenAI SDK; `voyage` POSTs to `https://ai.mongodb.com/v1/embeddings` with a `Bearer VOYAGE_API_KEY`. `inputType` (`"document"` | `"query"`) is passed to Voyage's `input_type` for asymmetric embeddings (semantic-search queries use `"query"`, everything else `"document"`); OpenAI ignores it. Config derives model + dimensions per provider (`config.embeddingModel` / `config.embeddingDimensions`), and `create-indexes` reads `embeddingDimensions` for the vector index.
+- **Switching providers is not hot-swappable**: OpenAI (1536) and Voyage (1024) vectors have different dimensions and live in different vector spaces — they are not comparable, and mixing them makes `$vectorSearch` error or return garbage. After changing `EMBEDDING_PROVIDER` (or `EMBEDDING_MODEL`) in `.env`, run **`pnpm reembed`** (`scripts/reembed.ts`), which does the full switch: rebuilds `notes_vector_index` when the dimensions change (drop → re-embed → recreate, in that order so the index never ingests mismatched vectors), re-embeds every Atlas note with the new provider, re-ensures the full-text `notes_search_index` exists (rebuilding the vector index can take the co-located text index down on some Atlas tiers — this is why text search broke on a bare drop/recreate), and clears local `embedding_pending` flags so the sync engine doesn't duplicate the work. Stop the backend first so the sync engine doesn't race it. `--keep-index` re-embeds only (for same-dimension model swaps). It is idempotent and safe to re-run. Both index definitions live in `src/db/search-indexes.ts`, shared by `reembed` and `create-indexes`.
 - The MongoClient uses `serverSelectionTimeoutMS: 5000` — required so offline requests fail fast instead of hanging 30s; the server listens before Atlas connects (never `process.exit` on connect failure)
 - Sync push must use `updateOne` + `$set`, never replace — SQLite doesn't store `embedding`, a replace would destroy vector data
 - FTS5 `MATCH` throws on raw user input (`"`, `-`, `(`) — `local-search.service.ts` quote-wraps each token; keep that if touching local search

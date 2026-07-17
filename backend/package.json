@@ -1,13 +1,14 @@
 {
   "name": "backend",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
     "seed": "tsx scripts/seed.ts",
-    "create-indexes": "tsx scripts/create-indexes.ts"
+    "create-indexes": "tsx scripts/create-indexes.ts",
+    "reembed": "tsx scripts/reembed.ts"
   },
   "dependencies": {
     "cors": "^2.8.6",

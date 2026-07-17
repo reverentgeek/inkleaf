@@ -1,10 +1,13 @@
 import { MongoClient } from "mongodb";
-import { resolve } from "path";
-import dotenv from "dotenv";
+import { config } from "../src/config.js";
+import {
+  SEARCH_INDEX,
+  VECTOR_INDEX,
+  searchIndexDefinition,
+  vectorIndexDefinition,
+} from "../src/db/search-indexes.js";
 
-dotenv.config({ path: resolve(import.meta.dirname, "../../.env") });
-
-const uri = process.env.MONGODB_URI!;
+const uri = config.mongodbUri;
 const dbName = "inkleaf";
 
 async function main() {
@@ -27,39 +30,11 @@ async function main() {
     }
 
     // Create Atlas Search index
-    console.log("Creating Atlas Search index 'notes_search_index'...");
+    console.log(`Creating Atlas Search index '${SEARCH_INDEX}'...`);
     try {
       await db.command({
         createSearchIndexes: "notes",
-        indexes: [
-          {
-            name: "notes_search_index",
-            definition: {
-              mappings: {
-                dynamic: false,
-                fields: {
-                  title: [
-                    { type: "string", analyzer: "lucene.standard" },
-                    {
-                      type: "autocomplete",
-                      tokenization: "edgeGram",
-                      minGrams: 2,
-                      maxGrams: 15,
-                    },
-                  ],
-                  markdown: {
-                    type: "string",
-                    analyzer: "lucene.standard",
-                  },
-                  tags: [
-                    { type: "string", analyzer: "lucene.keyword" },
-                    { type: "token" },
-                  ],
-                },
-              },
-            },
-          },
-        ],
+        indexes: [{ name: SEARCH_INDEX, definition: searchIndexDefinition }],
       });
       console.log(
         "Atlas Search index created. It may take 1-5 minutes to build.",
@@ -73,24 +48,18 @@ async function main() {
     }
 
     // Create Vector Search index
-    console.log("Creating Vector Search index 'notes_vector_index'...");
+    console.log(
+      `Creating Vector Search index '${VECTOR_INDEX}' ` +
+        `(${config.embeddingDimensions} dims, provider: ${config.embeddingProvider})...`,
+    );
     try {
       await db.command({
         createSearchIndexes: "notes",
         indexes: [
           {
-            name: "notes_vector_index",
+            name: VECTOR_INDEX,
             type: "vectorSearch",
-            definition: {
-              fields: [
-                {
-                  type: "vector",
-                  path: "embedding",
-                  numDimensions: 1536,
-                  similarity: "cosine",
-                },
-              ],
-            },
+            definition: vectorIndexDefinition(),
           },
         ],
       });

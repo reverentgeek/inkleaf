@@ -4,7 +4,7 @@ import { generateEmbedding, prepareTextForEmbedding } from "./embeddings.js";
 import type { SemanticResult, Note } from "../types/index.js";
 
 export async function semanticSearch(query: string): Promise<SemanticResult[]> {
-  const embedding = await generateEmbedding(query);
+  const embedding = await generateEmbedding(query, "query");
   if (!embedding) {
     return [];
   }

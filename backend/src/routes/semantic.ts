@@ -5,7 +5,8 @@ import { isOnline } from "../services/sync.service.js";
 
 const router: IRouter = Router();
 
-// Semantic search needs Atlas Vector Search + OpenAI embeddings — there is
+// Semantic search needs Atlas Vector Search + a configured embedding provider
+// (OpenAI or Voyage AI, see services/embeddings.ts) — there is
 // no meaningful offline equivalent, so fail fast with a clear error.
 router.use((_req: Request, res: Response, next: NextFunction) => {
   if (!isOnline()) {
