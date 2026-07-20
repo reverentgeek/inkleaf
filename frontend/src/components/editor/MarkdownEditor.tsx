@@ -65,6 +65,24 @@ const baseTheme = EditorView.theme({
   },
 });
 
+// Kept at a stable reference so @uiw/react-codemirror doesn't reconfigure the
+// editor on every parent re-render (e.g. sync-status polling). Reconfiguration
+// closes the open search panel, which made Cmd+F Find/Replace flash and vanish.
+const editorExtensions = [
+  markdown(),
+  baseTheme,
+  EditorView.lineWrapping,
+  cmdClickOpen,
+];
+
+// Also stable-by-reference — an inline object here would make
+// @uiw/react-codemirror reconfigure (and drop the search panel) each render.
+const editorBasicSetup = {
+  lineNumbers: false,
+  foldGutter: false,
+  highlightActiveLine: true,
+};
+
 const MarkdownEditor = forwardRef<MarkdownEditorHandle, MarkdownEditorProps>(
   function MarkdownEditor({ value, onChange }, ref) {
     const storeTheme = useAppStore((s) => s.theme);
@@ -182,14 +200,10 @@ const MarkdownEditor = forwardRef<MarkdownEditorHandle, MarkdownEditorProps>(
         ref={editorRef}
         value={initialValue}
         onChange={handleChange}
-        extensions={[markdown(), baseTheme, EditorView.lineWrapping, cmdClickOpen]}
+        extensions={editorExtensions}
         theme={storeTheme === "dark" ? oneDark : "light"}
         className="h-full"
-        basicSetup={{
-          lineNumbers: false,
-          foldGutter: false,
-          highlightActiveLine: true,
-        }}
+        basicSetup={editorBasicSetup}
       />
     );
   },
