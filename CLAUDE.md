@@ -12,40 +12,6 @@ A Tauri v2 desktop app: personal Markdown knowledge base demonstrating MongoDB A
 - **Package manager**: pnpm with workspaces (`frontend/`, `backend/`)
 - Processes launched together via `concurrently` from root scripts
 
-## Project Structure
-
-```
-inkleaf/
-├── package.json              # Root: pnpm workspaces + concurrently scripts
-├── pnpm-workspace.yaml
-├── .env / .env.example
-├── backend/
-│   ├── src/
-│   │   ├── index.ts          # Express server entry
-│   │   ├── config.ts         # Env vars
-│   │   ├── db/
-│   │   │   └── connection.ts # Standard MongoClient singleton
-│   │   ├── routes/           # notes, search, semantic
-│   │   ├── services/         # Business logic for each route
-│   │   ├── middleware/       # errorHandler
-│   │   └── types/            # Note, SearchResult interfaces
-│   └── scripts/              # seed, create-indexes
-└── frontend/
-    ├── src/
-    │   ├── App.tsx           # Root + keyboard shortcuts
-    │   ├── api/client.ts     # Typed fetch wrapper for all API endpoints
-    │   ├── stores/appStore.ts # Zustand global state
-    │   ├── hooks/            # useNotes, useSearch
-    │   ├── components/
-    │   │   ├── layout/       # Layout (3-column), Sidebar, Header
-    │   │   ├── editor/       # MarkdownEditor (CodeMirror), MarkdownPreview
-    │   │   ├── search/       # CommandPalette (cmdk), SearchResults
-    │   │   ├── notes/        # NoteList, NoteCard, RelatedNotes
-    │   │   └── tags/         # TagInput, TagFilter
-    │   └── styles/globals.css
-    └── src-tauri/            # Tauri v2 Rust config
-```
-
 ## Scripts
 
 All run from the project root with `pnpm`:
@@ -84,19 +50,6 @@ The app version lives in **six** files that must be bumped together (they have d
 | `MONGODB_DB` | No (default `inkleaf`) | Database name |
 | `SQLITE_PATH` | No (default `backend/data/inkleaf.db`) | Local offline store location |
 | `SYNC_INTERVAL_MS` | No (default 15000) | Background sync tick interval |
-
-## Key Dependencies
-
-**Backend**: express 5, mongodb 7, openai 6, cors, dotenv 17, zod 4, tsx
-
-**Frontend**: react 19, @uiw/react-codemirror, @codemirror/lang-markdown, @codemirror/theme-one-dark, cmdk, react-markdown 10, remark-gfm, rehype-highlight, zustand 5, lucide-react, @tauri-apps/api 2, tailwindcss 4, vite 7
-
-## Data Models
-
-### `notes` collection
-```
-_id, title, markdown, tags[], notebookId, createdAt, updatedAt, embedding[] (1536 dims for openai / 1024 for voyage)
-```
 
 ## Atlas Indexes
 
