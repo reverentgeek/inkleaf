@@ -36,6 +36,9 @@ export interface SearchResult {
   tags: string[];
   score: number;
   highlights: SearchHighlight[];
+  // Which retrievers surfaced the note when hybrid search answered. Absent or
+  // empty for text-only Atlas Search and offline local results.
+  matchedBy?: Array<"text" | "vector">;
 }
 
 export interface SemanticResult {
@@ -108,10 +111,8 @@ export const api = {
   },
 
   semantic: {
-    search: (q: string) =>
-      request<SemanticResult[]>(
-        `/semantic/search?q=${encodeURIComponent(q)}`,
-      ),
+    // Query search is unified under /search (hybrid). What's left is
+    // note-to-note similarity, which isn't query-driven.
     related: (noteId: string) =>
       request<SemanticResult[]>(`/semantic/related/${noteId}`),
   },

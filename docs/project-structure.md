@@ -21,13 +21,16 @@ Route groups:
 - `/api/notes`: notes CRUD, served from SQLite. Also the trash endpoints, since
   delete is a soft delete: `GET /trash`, `POST /:id/restore`,
   `DELETE /:id/permanent` (plain `DELETE /:id` just moves a note to the trash).
-- `/api/search`: full-text search and autocomplete through Atlas Search indexes
-  on title, markdown, and tags. Falls back to SQLite FTS5 when Atlas is
-  unreachable, so search keeps working offline.
-- `/api/semantic`: vector similarity search with `$vectorSearch`, plus the
-  "related notes" lookup. Online only, because generating a query embedding
-  means calling an API. Embeddings come from Voyage AI `voyage-4-lite` (1024
-  dimensions, the default) or OpenAI `text-embedding-3-small` (1536).
+- `/api/search`: the one search endpoint, plus autocomplete. Hybrid by default:
+  `$rankFusion` merges an Atlas Search `$search` over title, markdown, and tags
+  with a `$vectorSearch` over embeddings. It degrades a rung at a time, to
+  text-only `$search` when no embedding is available and to SQLite FTS5 when
+  Atlas is unreachable, so search keeps working offline. Embeddings come from
+  Voyage AI `voyage-4-lite` (1024 dimensions, the default) or OpenAI
+  `text-embedding-3-small` (1536).
+- `/api/semantic`: just the "related notes" lookup now, note-to-note similarity
+  with `$vectorSearch`. Online only, because it needs Atlas and an embedding
+  provider.
 - `/api/sync`: reports sync status, and `POST /api/sync/now` forces a sync tick.
 - `/api/health`: a liveness check the frontend uses to tell online from offline.
 
@@ -41,8 +44,10 @@ Inside `src/`:
 | `services/sync.service.ts` | The background push/pull engine and conflict resolution |
 | `services/notes.service.ts` | Notes CRUD against SQLite |
 | `services/local-search.service.ts` | Offline SQLite FTS5 search |
-| `services/search.service.ts` | Atlas Search pipelines, with the offline fallback branch |
-| `services/semantic.service.ts` | `$vectorSearch` pipelines and related notes |
+| `services/search.service.ts` | The strategy ladder: hybrid, then text-only, then local |
+| `services/hybrid-search.service.ts` | `$rankFusion` over `$search` + `$vectorSearch`, and highlight harvesting |
+| `services/snippet.ts` | Synthesized highlights for vector-only hits |
+| `services/semantic.service.ts` | `$vectorSearch` pipeline for related notes |
 | `services/embeddings.ts` | Pluggable embedding provider (Voyage or OpenAI) |
 
 `backend/scripts/` holds the three CLI utilities: `seed.ts` (sample notes),
@@ -58,8 +63,9 @@ identically in a browser tab or inside the Tauri window.
   and a related notes panel on the right. The main pane holds *either* the
   CodeMirror editor or the rendered Markdown preview, which swap via `viewMode`
   (`Cmd+E` and `Cmd+Shift+E`), rather than sitting side by side.
-- **Command palette** (cmdk) for text search (`Cmd+K`) and semantic search
-  (`Cmd+Shift+K`).
+- **Command palette** (cmdk) for search (`Cmd+K`). One mode: the backend fuses
+  keyword and semantic results, and each result badges which retriever found
+  it.
 - **Zustand** for state (`stores/appStore.ts`), a typed fetch client
   (`api/client.ts`) for every backend call, and hooks for the rest: `useNotes`,
   `useSearch`, `useSyncStatus` (polls sync state for the header indicator), and
@@ -115,5 +121,5 @@ The backend and frontend are independent processes started together by
 logic lives in React and Express.
 
 Want more depth? [save-note.md](save-note.md) and
-[semantic-search.md](semantic-search.md) trace a single user action all the way
+[hybrid-search.md](hybrid-search.md) trace a single user action all the way
 through this stack.

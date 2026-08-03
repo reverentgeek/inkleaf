@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { Command } from "cmdk";
-import { Search, Sparkles, FileText, CloudOff } from "lucide-react";
+import { Search, FileText, CloudOff } from "lucide-react";
 import { useSearch } from "../../hooks/useSearch";
 import { useAppStore } from "../../stores/appStore";
 import SearchResults from "./SearchResults";
@@ -17,18 +17,14 @@ export default function CommandPalette({
   onSelectNote,
 }: CommandPaletteProps) {
   const [query, setQuery] = useState("");
-  const mode = useAppStore((s) => s.commandPaletteMode);
-  const setMode = useAppStore((s) => s.setCommandPaletteMode);
   const isOnline = useAppStore((s) => s.syncStatus?.online ?? true);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const {
     searchResults,
-    semanticResults,
     autocompleteResults,
     isSearching,
     search,
     autocomplete,
-    semanticSearch,
     clearResults,
   } = useSearch();
 
@@ -55,24 +51,19 @@ export default function CommandPalette({
 
     if (debounceRef.current) clearTimeout(debounceRef.current);
 
+    // One request either way — the backend fuses keyword and semantic results
+    // when it can and degrades to text-only or local FTS5 when it can't.
     debounceRef.current = setTimeout(() => {
-      if (mode === "text") {
-        search(query);
-        autocomplete(query);
-      } else if (isOnline) {
-        // Semantic search requires Atlas + OpenAI — skip the request offline.
-        semanticSearch(query);
-      }
+      search(query);
+      autocomplete(query);
     }, 200);
 
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
-  }, [query, mode, isOnline, search, autocomplete, semanticSearch, clearResults]);
+  }, [query, search, autocomplete, clearResults]);
 
   if (!open) return null;
-
-  const results = mode === "text" ? searchResults : semanticResults;
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center pt-[20vh]">
@@ -81,32 +72,6 @@ export default function CommandPalette({
         className="relative w-full max-w-xl bg-ink-bg-primary border border-ink-border-strong rounded-xl shadow-2xl overflow-hidden"
         shouldFilter={false}
       >
-        {/* Mode tabs */}
-        <div className="flex border-b border-ink-border">
-          <button
-            onClick={() => setMode("text")}
-            className={`flex items-center gap-1.5 px-4 py-2 text-sm transition-colors ${
-              mode === "text"
-                ? "text-ink-accent-light border-b-2 border-ink-accent-light"
-                : "text-ink-text-faint hover:text-ink-text-tertiary"
-            }`}
-          >
-            <Search size={14} />
-            Text Search
-          </button>
-          <button
-            onClick={() => setMode("semantic")}
-            className={`flex items-center gap-1.5 px-4 py-2 text-sm transition-colors ${
-              mode === "semantic"
-                ? "text-ink-accent-light border-b-2 border-ink-accent-light"
-                : "text-ink-text-faint hover:text-ink-text-tertiary"
-            }`}
-          >
-            <Sparkles size={14} />
-            Semantic Search
-          </button>
-        </div>
-
         {/* Search input */}
         <div className="flex items-center px-4 border-b border-ink-border">
           <Search size={16} className="text-ink-text-faint" />
@@ -114,11 +79,7 @@ export default function CommandPalette({
             autoFocus
             value={query}
             onValueChange={setQuery}
-            placeholder={
-              mode === "text"
-                ? "Search notes..."
-                : "Describe what you're looking for..."
-            }
+            placeholder="Search notes, or describe what you're looking for..."
             className="flex-1 px-3 py-3 bg-transparent text-sm text-ink-text-secondary outline-none placeholder:text-ink-text-placeholder"
           />
           {isSearching && (
@@ -126,16 +87,16 @@ export default function CommandPalette({
           )}
         </div>
 
-        {/* Offline hint (text mode searches the local store) */}
-        {!isOnline && mode === "text" && (
+        {/* Offline hint — no vector half without a connection, keyword only */}
+        {!isOnline && (
           <div className="flex items-center gap-1.5 px-4 py-1.5 border-b border-ink-border text-xs text-amber-500">
             <CloudOff size={12} />
-            Offline — searching locally
+            Offline — searching locally, keyword matches only
           </div>
         )}
 
-        {/* Autocomplete suggestions (text mode) */}
-        {mode === "text" && autocompleteResults.length > 0 && (
+        {/* Autocomplete suggestions */}
+        {autocompleteResults.length > 0 && (
           <div className="px-2 py-1 border-b border-ink-border">
             <div className="flex flex-wrap gap-1">
               {autocompleteResults.map((r) => (
@@ -154,25 +115,12 @@ export default function CommandPalette({
 
         {/* Results */}
         <Command.List className="max-h-80 overflow-y-auto p-2">
-          {mode === "semantic" && !isOnline ? (
-            <div className="p-4 text-sm text-ink-text-faint text-center">
-              <CloudOff size={20} className="mx-auto mb-2 text-amber-500" />
-              Semantic search requires a connection
-            </div>
-          ) : (
-            <>
-              {query && !isSearching && results.length === 0 && (
-                <Command.Empty className="p-4 text-sm text-ink-text-faint text-center">
-                  No results found
-                </Command.Empty>
-              )}
-              <SearchResults
-                results={results}
-                onSelect={handleSelect}
-                mode={mode}
-              />
-            </>
+          {query && !isSearching && searchResults.length === 0 && (
+            <Command.Empty className="p-4 text-sm text-ink-text-faint text-center">
+              No results found
+            </Command.Empty>
           )}
+          <SearchResults results={searchResults} onSelect={handleSelect} />
         </Command.List>
       </Command>
     </div>

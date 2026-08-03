@@ -1,14 +1,40 @@
 import { getDb } from "../db/connection.js";
 import { isOnline } from "./sync.service.js";
 import { localSearch, localAutocomplete } from "./local-search.service.js";
+import { hybridSearch } from "./hybrid-search.service.js";
+import { isEmbeddingConfigured } from "./embeddings.js";
 import type { SearchResult, AutocompleteResult } from "../types/index.js";
 
+/**
+ * The one search entry point, degrading in three steps:
+ *
+ *   1. hybrid ($rankFusion over Atlas Search + Vector Search) — online, with an
+ *      embedding provider configured
+ *   2. text-only Atlas Search — online, but no embedding available
+ *   3. local FTS5 over SQLite — offline
+ *
+ * Every step returns the same wire shape, so the frontend never branches on
+ * which engine answered.
+ */
 export async function searchNotes(
   query: string,
   tags?: string[],
 ): Promise<SearchResult[]> {
   // Offline → local FTS5 over the SQLite store (same response shape).
   if (!isOnline()) return localSearch(query, tags);
+
+  if (isEmbeddingConfigured()) {
+    try {
+      const results = await hybridSearch(query, tags);
+      // null means the embedding call came back empty — fall through to text.
+      if (results) return results;
+    } catch (err) {
+      // Cluster below MongoDB 8.0, embedding provider outage, missing vector
+      // index. Text search still works, so degrade instead of failing.
+      console.warn("Hybrid search failed, falling back to text search:", err);
+    }
+  }
+
   try {
     return await atlasSearch(query, tags);
   } catch (err) {

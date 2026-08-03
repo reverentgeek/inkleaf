@@ -1,14 +1,15 @@
 # Inkleaf
 
-A Tauri v2 desktop app: personal Markdown knowledge base demonstrating MongoDB Atlas Search and Atlas Vector Search.
+A Tauri v2 desktop app: personal Markdown knowledge base demonstrating MongoDB Atlas Search, Atlas Vector Search, and hybrid search via `$rankFusion`.
 
 ## Architecture
 
 - **Frontend**: React 19 + Vite 7 + Tailwind CSS 4, runs in Tauri v2 webview (localhost:5173)
 - **Backend**: Express 5 + TypeScript on Node.js, standalone process (localhost:3001)
 - **Database**: MongoDB Atlas — `notes` collection (searchable)
-- **Offline-first**: notes CRUD is served from a local SQLite store (`backend/data/inkleaf.db`, via built-in `node:sqlite`); a background sync engine (`services/sync.service.ts`) pushes dirty rows to Atlas and pulls remote changes (last-write-wins by `updatedAt`, ID reconciliation handles remote *permanent* deletes + reseeds). Text search falls back to SQLite FTS5 when Atlas is unreachable; semantic search is online-only (503 `{code:"OFFLINE"}`). `GET/POST /api/sync[/now]` exposes status; frontend polls it (`useSyncStatus`) into the Zustand store and shows a header indicator.
-- **Soft delete (recoverable)**: deleting a note trashes it — it's hidden from reads but kept. In SQLite `deleted=1` + `deleted_at` mark the tombstone; in Atlas the doc is kept with a `deletedAt` field (never removed). Restore clears both; **permanent** delete (`purge_pending=1`) is the only op that actually removes the Atlas doc + local row. Endpoints: `GET /api/notes/trash`, `POST /api/notes/:id/restore`, `DELETE /api/notes/:id/permanent` (plain `DELETE /api/notes/:id` = soft). Search must exclude trashed docs: Atlas full-text/vector pipelines add `$match: { deletedAt: null }`, local FTS filters `deleted=0`. Frontend surfaces an undo toast (`components/Toast.tsx`) after delete and a Trash view in the sidebar (`sidebarView` in the store).
+- **Search is one thing**: `GET /api/search` is the only query surface. `search.service.ts` picks a strategy and degrades: hybrid `$rankFusion` (online + embedding provider configured) → text-only `$search` (no embedding available) → SQLite FTS5 (offline). All three return the same `SearchResult` shape, so the frontend never branches on which engine answered. There is no semantic-only search mode; `/api/semantic` keeps only `related/:noteId` (note-to-note similarity, not query-driven).
+- **Offline-first**: notes CRUD is served from a local SQLite store (`backend/data/inkleaf.db`, via built-in `node:sqlite`); a background sync engine (`services/sync.service.ts`) pushes dirty rows to Atlas and pulls remote changes (last-write-wins by `updatedAt`, ID reconciliation handles remote *permanent* deletes + reseeds). Search falls back to SQLite FTS5 when Atlas is unreachable (keyword only, no vector half); related-notes is online-only (503 `{code:"OFFLINE"}`). `GET/POST /api/sync[/now]` exposes status; frontend polls it (`useSyncStatus`) into the Zustand store and shows a header indicator.
+- **Soft delete (recoverable)**: deleting a note trashes it — it's hidden from reads but kept. In SQLite `deleted=1` + `deleted_at` mark the tombstone; in Atlas the doc is kept with a `deletedAt` field (never removed). Restore clears both; **permanent** delete (`purge_pending=1`) is the only op that actually removes the Atlas doc + local row. Endpoints: `GET /api/notes/trash`, `POST /api/notes/:id/restore`, `DELETE /api/notes/:id/permanent` (plain `DELETE /api/notes/:id` = soft). Search must exclude trashed docs: Atlas full-text/vector pipelines add `$match: { deletedAt: null }` (including inside every `$rankFusion` sub-pipeline), local FTS filters `deleted=0`. Frontend surfaces an undo toast (`components/Toast.tsx`) after delete and a Trash view in the sidebar (`sidebarView` in the store).
 - **Package manager**: pnpm with workspaces (`frontend/`, `backend/`)
 - Processes launched together via `concurrently` from root scripts
 
@@ -50,6 +51,8 @@ The app version lives in **six** files that must be bumped together (they have d
 | `MONGODB_DB` | No (default `inkleaf`) | Database name |
 | `SQLITE_PATH` | No (default `backend/data/inkleaf.db`) | Local offline store location |
 | `SYNC_INTERVAL_MS` | No (default 15000) | Background sync tick interval |
+| `HYBRID_TEXT_WEIGHT` | No (default 0.4) | `$rankFusion` weight for the full-text sub-pipeline |
+| `HYBRID_VECTOR_WEIGHT` | No (default 0.6) | `$rankFusion` weight for the vector sub-pipeline |
 
 ## Atlas Indexes
 
@@ -61,8 +64,7 @@ The app version lives in **six** files that must be bumped together (they have d
 | Shortcut | Action |
 |----------|--------|
 | Cmd+N | Create a new note (focuses the title input) |
-| Cmd+K | Open command palette (text search) |
-| Cmd+Shift+K | Open command palette (semantic search) |
+| Cmd+K | Open command palette (hybrid search) |
 | Cmd+Shift+T | Toggle light/dark theme |
 | Cmd+\ | Toggle sidebar |
 | ↑ / ↓ | Previous / next note when the note list is focused |
@@ -89,6 +91,13 @@ The app version lives in **six** files that must be bumped together (they have d
 - Embedding generation is queued via the `embedding_pending` flag in SQLite and performed by the sync engine after content is pushed (works across offline periods)
 - **Embedding provider** is pluggable in `services/embeddings.ts` behind `generateEmbedding(text, inputType)`. `EMBEDDING_PROVIDER=openai` uses the OpenAI SDK; `voyage` POSTs to `https://ai.mongodb.com/v1/embeddings` with a `Bearer VOYAGE_API_KEY`. `inputType` (`"document"` | `"query"`) is passed to Voyage's `input_type` for asymmetric embeddings (semantic-search queries use `"query"`, everything else `"document"`); OpenAI ignores it. Config derives model + dimensions per provider (`config.embeddingModel` / `config.embeddingDimensions`), and `create-indexes` reads `embeddingDimensions` for the vector index.
 - **Switching providers is not hot-swappable**: OpenAI (1536) and Voyage (1024) vectors have different dimensions and live in different vector spaces — they are not comparable, and mixing them makes `$vectorSearch` error or return garbage. After changing `EMBEDDING_PROVIDER` (or `EMBEDDING_MODEL`) in `.env`, run **`pnpm reembed`** (`scripts/reembed.ts`), which does the full switch: rebuilds `notes_vector_index` when the dimensions change (drop → re-embed → recreate, in that order so the index never ingests mismatched vectors), re-embeds every Atlas note with the new provider, re-ensures the full-text `notes_search_index` exists (rebuilding the vector index can take the co-located text index down on some Atlas tiers — this is why text search broke on a bare drop/recreate), and clears local `embedding_pending` flags so the sync engine doesn't duplicate the work. Stop the backend first so the sync engine doesn't race it. `--keep-index` re-embeds only (for same-dimension model swaps). It is idempotent and safe to re-run. Both index definitions live in `src/db/search-indexes.ts`, shared by `reembed` and `create-indexes`.
+- **Hybrid search** (`services/hybrid-search.service.ts`) needs **MongoDB 8.0+** for `$rankFusion`. Two constraints shape the implementation, and both have bitten already:
+  - Sub-pipelines may only contain `$search`, `$vectorSearch`, `$match`, `$sort`, `$geoNear` — **no `$project`** — and `$meta: "searchHighlights"` is unavailable after the fusion stage. So highlights are harvested by running the text retriever a **second time** as a standalone `$search` (with `highlight`) in parallel, then joined onto the fused ranking by `_id`. Don't "simplify" that second aggregation away; it's the only way to keep highlights.
+  - Vector-only hits have no keyword to highlight, so `services/snippet.ts` synthesizes an Atlas-shaped highlight from the note body (term match → `buildHighlight`, else plain excerpt → `buildExcerpt`). Its regex escapes user input; keep that if touching it.
+  - Fused scores come from `$meta: "score"` (not `searchScore`/`vectorSearchScore`), and are small (~0.01–0.03) since RRF sums `weight / (rank + 60)`. `rankConstant` is fixed at 60. `$rankFusion` does **not** support pagination (`$skip`), so the 20-result limit is load-bearing.
+  - `scoreDetails: true` surfaces per-pipeline ranks, mapped to `matchedBy: ["text"|"vector"]` for the UI badges. A pipeline that didn't return the doc reports no positive rank.
+  - Sub-pipeline candidate limits (`CANDIDATES = 40`) are deliberately wider than the final 20 — with no overlap between the two result sets, RRF degenerates into two interleaved lists.
+  - A missing/bad vector index does **not** throw; Atlas returns the text half only (verified). The `try/catch` in `search.service.ts` covers the pre-8.0 and embedding-provider-failure cases.
 - The MongoClient uses `serverSelectionTimeoutMS: 5000` — required so offline requests fail fast instead of hanging 30s; the server listens before Atlas connects (never `process.exit` on connect failure)
 - Sync push must use `updateOne` + `$set`, never replace — SQLite doesn't store `embedding`, a replace would destroy vector data. Soft delete pushes `$set { deletedAt }` (keeps the doc); only `purge_pending` rows call `deleteOne`. Pull-phase ID-absence means a *permanent* remote delete (soft-deleted docs still exist remotely with `deletedAt`), so it hard-deletes locally.
 - SQLite schema changes need an additive migration: `CREATE TABLE IF NOT EXISTS` won't add columns to an existing store. `db/sqlite.ts` `migrate()` runs guarded `ALTER TABLE ... ADD COLUMN` (checked via `PRAGMA table_info`) — this is how `deleted_at`/`purge_pending` reach pre-existing dbs.

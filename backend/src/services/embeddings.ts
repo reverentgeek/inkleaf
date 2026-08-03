@@ -11,6 +11,17 @@ function getOpenAIClient(): OpenAI | null {
   return openai;
 }
 
+/**
+ * True when the configured provider has an API key. Hybrid search checks this
+ * up front so it can fall back to text-only instead of paying for a doomed
+ * embedding call on every keystroke.
+ */
+export function isEmbeddingConfigured(): boolean {
+  return config.embeddingProvider === "voyage"
+    ? Boolean(config.voyageApiKey)
+    : Boolean(config.openaiApiKey);
+}
+
 export function prepareTextForEmbedding(
   title: string,
   markdown: string,

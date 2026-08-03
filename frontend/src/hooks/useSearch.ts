@@ -1,10 +1,12 @@
 import { useState, useCallback } from "react";
 import { api } from "../api/client";
-import type { SearchResult, SemanticResult, AutocompleteResult } from "../api/client";
+import type { SearchResult, AutocompleteResult } from "../api/client";
 
+// One result set. The backend decides how the query is answered — hybrid
+// ($rankFusion over Atlas Search + Vector Search), text-only Atlas Search, or
+// local FTS5 when offline — and all three share this shape.
 export function useSearch() {
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
-  const [semanticResults, setSemanticResults] = useState<SemanticResult[]>([]);
   const [autocompleteResults, setAutocompleteResults] = useState<AutocompleteResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
 
@@ -39,37 +41,17 @@ export function useSearch() {
     }
   }, []);
 
-  const semanticSearch = useCallback(async (query: string) => {
-    if (!query.trim()) {
-      setSemanticResults([]);
-      return;
-    }
-    setIsSearching(true);
-    try {
-      const results = await api.semantic.search(query);
-      setSemanticResults(Array.isArray(results) ? results : []);
-    } catch (err) {
-      console.error("Semantic search failed:", err);
-      setSemanticResults([]);
-    } finally {
-      setIsSearching(false);
-    }
-  }, []);
-
   const clearResults = useCallback(() => {
     setSearchResults([]);
-    setSemanticResults([]);
     setAutocompleteResults([]);
   }, []);
 
   return {
     searchResults,
-    semanticResults,
     autocompleteResults,
     isSearching,
     search,
     autocomplete,
-    semanticSearch,
     clearResults,
   };
 }

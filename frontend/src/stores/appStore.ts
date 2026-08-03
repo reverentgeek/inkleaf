@@ -35,9 +35,6 @@ interface AppState {
   setSidebarOpen: (open: boolean) => void;
   commandPaletteOpen: boolean;
   setCommandPaletteOpen: (open: boolean) => void;
-  commandPaletteMode: "text" | "semantic";
-  setCommandPaletteMode: (mode: "text" | "semantic") => void;
-  openCommandPalette: (mode: "text" | "semantic") => void;
   viewMode: "edit" | "preview";
   setViewMode: (mode: "edit" | "preview") => void;
 
@@ -86,9 +83,6 @@ export const useAppStore = create<AppState>((set) => ({
   setSidebarOpen: (open) => set({ sidebarOpen: open }),
   commandPaletteOpen: false,
   setCommandPaletteOpen: (open) => set({ commandPaletteOpen: open }),
-  commandPaletteMode: "text",
-  setCommandPaletteMode: (mode) => set({ commandPaletteMode: mode }),
-  openCommandPalette: (mode) => set({ commandPaletteOpen: true, commandPaletteMode: mode }),
 
   viewMode: "edit",
   setViewMode: (mode) => set({ viewMode: mode }),

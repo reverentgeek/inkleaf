@@ -5,28 +5,23 @@ import { isOnline } from "../services/sync.service.js";
 
 const router: IRouter = Router();
 
-// Semantic search needs Atlas Vector Search + a configured embedding provider
-// (OpenAI or Voyage AI, see services/embeddings.ts) — there is
-// no meaningful offline equivalent, so fail fast with a clear error.
+// Semantic search as a user-facing mode is gone — /api/search now fuses text and
+// vector results with $rankFusion. What's left here is "related notes", which is
+// pure vector similarity against a stored note's own embedding and has no place
+// in a query-driven fusion.
+//
+// Vector Search needs Atlas + a configured embedding provider (see
+// services/embeddings.ts) and has no meaningful offline equivalent, so this
+// fails fast with a clear error rather than degrading.
 router.use((_req: Request, res: Response, next: NextFunction) => {
   if (!isOnline()) {
     res.status(503).json({
-      error: "Semantic search requires a connection",
+      error: "Related notes requires a connection",
       code: "OFFLINE",
     });
     return;
   }
   next();
-});
-
-router.get("/search", async (req: Request, res: Response) => {
-  const q = req.query.q as string;
-  if (!q) {
-    res.status(400).json({ error: "Query parameter 'q' is required" });
-    return;
-  }
-  const results = await semanticService.semanticSearch(q);
-  res.json(results);
 });
 
 router.get("/related/:noteId", async (req: Request, res: Response) => {

@@ -42,6 +42,9 @@ export interface SearchResult {
   tags: string[];
   score: number;
   highlights: SearchHighlight[];
+  // Which retrievers surfaced the note, when hybrid search answered. Empty for
+  // text-only Atlas Search and local FTS5 results.
+  matchedBy?: Array<"text" | "vector">;
 }
 
 export interface SearchHighlight {

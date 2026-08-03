@@ -35,4 +35,8 @@ export const config = {
     process.env.SQLITE_PATH ||
     resolve(import.meta.dirname, "../data/inkleaf.db"),
   syncIntervalMs: parseInt(process.env.SYNC_INTERVAL_MS || "15000", 10),
+  // $rankFusion weights for hybrid search. Vector leads slightly because the
+  // full-text retriever already dominates on exact keyword matches.
+  hybridTextWeight: parseFloat(process.env.HYBRID_TEXT_WEIGHT || "0.4"),
+  hybridVectorWeight: parseFloat(process.env.HYBRID_VECTOR_WEIGHT || "0.6"),
 } as const;

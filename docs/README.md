@@ -7,7 +7,7 @@ Two very different kinds of document live in here, so mind the labels. The first
 Accurate descriptions of code that actually exists:
 
 - [save-note.md](save-note.md): end-to-end walkthrough of editing a note, from keystrokes through to Atlas and async embedding generation
-- [semantic-search.md](semantic-search.md): end-to-end walkthrough of a semantic search, from `Cmd+Shift+K` through embeddings to `$vectorSearch`
+- [hybrid-search.md](hybrid-search.md): end-to-end walkthrough of a search, from `Cmd+K` through the query embedding to `$rankFusion` over `$search` + `$vectorSearch`
 - [project-structure.md](project-structure.md): quick tour of how the backend and frontend are laid out
 
 ## Possible future ideas

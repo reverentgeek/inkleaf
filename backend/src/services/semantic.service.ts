@@ -3,41 +3,9 @@ import { getDb } from "../db/connection.js";
 import { generateEmbedding, prepareTextForEmbedding } from "./embeddings.js";
 import type { SemanticResult, Note } from "../types/index.js";
 
-export async function semanticSearch(query: string): Promise<SemanticResult[]> {
-  const embedding = await generateEmbedding(query, "query");
-  if (!embedding) {
-    return [];
-  }
-
-  const db = getDb();
-  const pipeline = [
-    {
-      $vectorSearch: {
-        index: "notes_vector_index",
-        path: "embedding",
-        queryVector: embedding,
-        numCandidates: 100,
-        limit: 10,
-      },
-    },
-    // Drop trashed notes (kept in Atlas with deletedAt set until purged).
-    { $match: { deletedAt: null } },
-    {
-      $project: {
-        title: 1,
-        markdown: 1,
-        tags: 1,
-        score: { $meta: "vectorSearchScore" },
-      },
-    },
-  ];
-
-  return db
-    .collection("notes")
-    .aggregate<SemanticResult>(pipeline)
-    .toArray();
-}
-
+// Query-driven semantic search lives in hybrid-search.service.ts now, fused with
+// full-text results by $rankFusion. This file keeps the one vector operation that
+// isn't query-driven: finding notes similar to an existing note.
 export async function findRelatedNotes(
   noteId: string,
 ): Promise<SemanticResult[]> {

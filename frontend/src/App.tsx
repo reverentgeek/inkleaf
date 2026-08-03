@@ -3,7 +3,7 @@ import Layout from "./components/layout/Layout";
 import { useAppStore } from "./stores/appStore";
 
 export default function App() {
-  const { setCommandPaletteOpen, openCommandPalette, setViewMode, theme, toggleTheme, setSidebarOpen } = useAppStore();
+  const { setCommandPaletteOpen, setViewMode, theme, toggleTheme, setSidebarOpen } = useAppStore();
 
   // Sync theme class to <html>
   useEffect(() => {
@@ -18,10 +18,11 @@ export default function App() {
     const handleKeyDown = (e: KeyboardEvent) => {
       const isMod = e.metaKey || e.ctrlKey;
 
-      // Cmd+K / Cmd+Shift+K: Open command palette
+      // Cmd+K: Open command palette. One search now — /api/search fuses
+      // full-text and vector results, so there's no separate semantic mode.
       if (isMod && e.key.toLowerCase() === "k") {
         e.preventDefault();
-        openCommandPalette(e.shiftKey ? "semantic" : "text");
+        setCommandPaletteOpen(true);
         return;
       }
 
@@ -54,7 +55,7 @@ export default function App() {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [setCommandPaletteOpen, openCommandPalette, setViewMode, toggleTheme, setSidebarOpen]);
+  }, [setCommandPaletteOpen, setViewMode, toggleTheme, setSidebarOpen]);
 
   return <Layout />;
 }

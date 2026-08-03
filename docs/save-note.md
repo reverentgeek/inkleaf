@@ -230,7 +230,7 @@ This calls two functions from `backend/src/services/embeddings.ts`:
    return response.data[0].embedding;
    ```
 
-The resulting vector is written back to the `embedding` field of the same document via `updateOne()`. This keeps the note's vector embedding in sync with its content, powering semantic search and "related notes" features.
+The resulting vector is written back to the `embedding` field of the same document via `updateOne()`. This keeps the note's vector embedding in sync with its content, powering the semantic half of [hybrid search](hybrid-search.md) and the "related notes" panel.
 
 If `OPENAI_API_KEY` is not configured, `generateEmbedding()` returns `null` and the embedding is silently skipped.
 
