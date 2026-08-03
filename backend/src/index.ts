@@ -39,7 +39,9 @@ function start() {
 
   // Listen immediately; the sync loop owns connecting (and reconnecting)
   // to Atlas, so the app works offline from a cold start.
-  app.listen(config.port, () => {
+  // Bind to loopback only — the API is unauthenticated and is meant to be
+  // reached solely by the local webview, never by other machines on the LAN.
+  app.listen(config.port, "127.0.0.1", () => {
     console.log(`Backend running on http://localhost:${config.port}`);
   });
 

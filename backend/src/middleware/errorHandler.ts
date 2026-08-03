@@ -9,7 +9,9 @@ export function errorHandler(
   console.error("Error:", err.message);
   console.error(err.stack);
 
+  // Keep driver/Atlas details (hostnames, cluster names, credentials in
+  // connection errors) out of the response body — the full error is logged.
   res.status(500).json({
-    error: err.message || "Internal server error",
+    error: "Internal server error",
   });
 }

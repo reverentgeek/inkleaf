@@ -18,6 +18,9 @@
     "openai": "^7.3.0",
     "zod": "^4.4.3"
   },
+  "engines": {
+    "node": ">=22.5.0"
+  },
   "devDependencies": {
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",

@@ -8,6 +8,14 @@ A desktop Markdown knowledge base built with **Tauri v2**, **React**, and **Mong
 
 ![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)
 
+## Screenshots
+
+The editor, tag sidebar, and semantic "Related Notes" panel — in dark and light themes (`Cmd+Shift+T` toggles).
+
+![Inkleaf in dark theme](docs/screenshot-dark.png)
+
+![Inkleaf in light theme](docs/screenshot-light.png)
+
 ## Features
 
 - **Markdown Editor** — CodeMirror-powered editor with live preview, syntax highlighting, and auto-save
@@ -15,7 +23,7 @@ A desktop Markdown knowledge base built with **Tauri v2**, **React**, and **Mong
 - **Vector Search** — Semantic search powered by embeddings and `$vectorSearch`, plus a related notes panel. Choose your embedding provider: MongoDB's **Voyage AI** `voyage-4-lite` (default) or OpenAI `text-embedding-3-small`
 - **Offline-First** — All notes live in a local SQLite store, so you can view and edit offline; changes sync to Atlas automatically when connected (last-write-wins), with SQLite FTS5 full-text search as the offline fallback
 - **Search Palette** — `Cmd+K` for text search, `Cmd+Shift+K` for semantic search
-- **Desktop App** — Native window via Tauri v2, with a dark theme and keyboard-driven workflow
+- **Desktop App** — Native window via Tauri v2, with light and dark themes and a keyboard-driven workflow
 
 ## Architecture
 
@@ -54,7 +62,7 @@ A desktop Markdown knowledge base built with **Tauri v2**, **React**, and **Mong
 
 ## Prerequisites
 
-- [Node.js](https://nodejs.org/) v22.5+ (the offline store uses the built-in `node:sqlite` module)
+- [Node.js](https://nodejs.org/) v22.5+ (the offline store uses the built-in `node:sqlite` module). This is enforced via `engines`, so `pnpm install` fails early on older versions. Node 24+ is recommended — before it, `node:sqlite` was experimental and logs a warning on startup.
 - [pnpm](https://pnpm.io/)
 - [Rust](https://www.rust-lang.org/tools/install) (for Tauri desktop builds — see below)
 - A [MongoDB Atlas](https://www.mongodb.com/atlas) cluster
