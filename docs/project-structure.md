@@ -1,48 +1,119 @@
-# Tauri Demo Notes
+# Project Structure
 
-1. Backend (`/backend`)
+A quick tour of how the repo is laid out and which piece does what. It's a pnpm
+workspace with two packages, `backend/` and `frontend/`, plus a Tauri shell
+nested inside the frontend.
 
-A Node.js/Express 5 REST API server running on localhost:3001. It provides these route groups:
+## Backend (`backend/`)
 
-- `/notes`: CRUD for regular notes stored in MongoDB
-- `/search`: full-text search powered by MongoDB Atlas Search indexes on title, markdown, and tags
-- `/semantic`: vector similarity search using OpenAI embeddings (1536-dim) and Atlas Vector Search, plus "related notes" lookups
+A Node.js and Express 5 API on `localhost:3001`, written in TypeScript. It binds
+to `127.0.0.1` only, since it has no authentication and is meant purely for the
+local app to talk to.
 
-It also includes utility scripts for seeding data and creating Atlas indexes.
+The thing to know before reading any of it: **SQLite is the source of truth, not
+Atlas.** Every read and write hits a local SQLite database
+(`backend/data/inkleaf.db`, using the built-in `node:sqlite` module), and a
+background sync engine moves changes to and from MongoDB Atlas. That's what
+makes the app work on a plane.
 
-1. Frontend (`/frontend`)
+Route groups:
 
-A React 19 + Vite 7 + Tailwind CSS 4 web app. This is the UI layer with:
+- `/api/notes`: notes CRUD, served from SQLite. Also the trash endpoints, since
+  delete is a soft delete: `GET /trash`, `POST /:id/restore`,
+  `DELETE /:id/permanent` (plain `DELETE /:id` just moves a note to the trash).
+- `/api/search`: full-text search and autocomplete through Atlas Search indexes
+  on title, markdown, and tags. Falls back to SQLite FTS5 when Atlas is
+  unreachable, so search keeps working offline.
+- `/api/semantic`: vector similarity search with `$vectorSearch`, plus the
+  "related notes" lookup. Online only, because generating a query embedding
+  means calling an API. Embeddings come from Voyage AI `voyage-4-lite` (1024
+  dimensions, the default) or OpenAI `text-embedding-3-small` (1536).
+- `/api/sync`: reports sync status, and `POST /api/sync/now` forces a sync tick.
+- `/api/health`: a liveness check the frontend uses to tell online from offline.
 
-- A 3-column layout: sidebar (note list), CodeMirror markdown editor, and a rendered markdown preview
-- A command palette (cmdk) for text search (Cmd+K) and semantic search (Cmd+Shift+K)
-- Zustand for state management, a typed fetch client (`api/client.ts`) for all backend calls, and custom hooks (useNotes, useSearch)
+Inside `src/`:
 
-When you run `pnpm dev`, this is served by Vite at localhost:5173 and opens in a browser.
+| Path | What lives there |
+| --- | --- |
+| `db/sqlite.ts` | Local store, schema, and additive migrations |
+| `db/connection.ts` | Atlas client, with a fast-fail 5s server selection timeout |
+| `db/search-indexes.ts` | Shared Atlas Search and Vector Search index definitions |
+| `services/sync.service.ts` | The background push/pull engine and conflict resolution |
+| `services/notes.service.ts` | Notes CRUD against SQLite |
+| `services/local-search.service.ts` | Offline SQLite FTS5 search |
+| `services/search.service.ts` | Atlas Search pipelines, with the offline fallback branch |
+| `services/semantic.service.ts` | `$vectorSearch` pipelines and related notes |
+| `services/embeddings.ts` | Pluggable embedding provider (Voyage or OpenAI) |
 
-1. Tauri Desktop Shell (`/frontend/src-tauri`)
+`backend/scripts/` holds the three CLI utilities: `seed.ts` (sample notes),
+`create-indexes.ts` (Atlas Search and Vector Search indexes), and `reembed.ts`
+(re-embed everything after switching providers).
 
-This is a Tauri project nested inside the frontend workspace. Its purpose is to wrap the React frontend into a native desktop application (macOS, Windows, Linux) instead of running it in a browser.
+## Frontend (`frontend/`)
 
-The Rust code is minimal. lib.rs just calls tauri::Builder::default().run() and main.rs calls that. There's no custom Rust logic; Tauri handles:
+A React 19, Vite 7, and Tailwind CSS 4 app. This is the whole UI, and it runs
+identically in a browser tab or inside the Tauri window.
 
-- Native window management: creates a 1400x900 window with the React app loaded from the Vite dev server (localhost:5173) or the production build (../dist)
-- Security: enforces a Content Security Policy that restricts network access to localhost:3001 (the backend)
-- App bundling: packages the app with icons for distribution on each platform
-- Dev orchestration: its beforeDevCommand runs pnpm dev (backend + Vite), so `pnpm dev:tauri` launches everything together with the app in a native window instead of a browser tab
+- **Three-column layout**: the sidebar (tag tree and note list), the main pane,
+  and a related notes panel on the right. The main pane holds *either* the
+  CodeMirror editor or the rendered Markdown preview, which swap via `viewMode`
+  (`Cmd+E` and `Cmd+Shift+E`), rather than sitting side by side.
+- **Command palette** (cmdk) for text search (`Cmd+K`) and semantic search
+  (`Cmd+Shift+K`).
+- **Zustand** for state (`stores/appStore.ts`), a typed fetch client
+  (`api/client.ts`) for every backend call, and hooks for the rest: `useNotes`,
+  `useSearch`, `useSyncStatus` (polls sync state for the header indicator), and
+  `useImportExport`.
+- **Light and dark themes** through CSS custom properties, toggled with
+  `Cmd+Shift+T` and persisted to `localStorage`.
+- `lib/markdownFile.ts` and `lib/fileIO.ts` handle Markdown import and export,
+  including YAML frontmatter. Import and export are entirely frontend-side, with
+  no backend endpoints involved.
 
-The target/ directory inside src-tauri is the Rust/Cargo build cache (the one we just cleaned).
+Running `pnpm dev` serves this at `localhost:5173` in your browser.
 
-## How they connect
+## Tauri desktop shell (`frontend/src-tauri/`)
+
+A Tauri v2 project nested inside the frontend workspace, which wraps the React
+app into a native desktop application instead of a browser tab.
+
+The Rust side is small but not empty. `lib.rs` builds the **native menu** and
+emits events the webview listens for (`show-keyboard-shortcuts`, `menu-import`,
+`menu-export`), registers the `dialog` and `fs` plugins that make desktop file
+import and export work, and exposes one command, `open_external`. Tauri itself
+handles:
+
+- **Window management**: a 1400x900 window (minimum 900x600) loading the React
+  app from the Vite dev server on `localhost:5173`, or from the production build
+  in `../dist`.
+- **Security**: a Content Security Policy that keeps network access to
+  `localhost:3001` and the Tauri IPC channel. Filesystem access is scoped to
+  `$HOME/**` in `capabilities/default.json`.
+- **Bundling**: packaging the app with platform icons for distribution.
+- **Dev orchestration**: `beforeDevCommand` runs `pnpm dev`, so a single
+  `pnpm dev:tauri` starts the backend, Vite, and the native window together.
+
+The `target/` directory inside `src-tauri` is just the Cargo build cache. It's
+gitignored, and `pnpm clean` deletes it when it gets large.
+
+## How it all connects
 
 ```text
 pnpm dev:tauri
 │
-├── Express backend (localhost:3001) ──► MongoDB Atlas
+├── Express backend (127.0.0.1:3001)
+│     ├── SQLite (source of truth, FTS5 offline search)
+│     └── background sync ──► MongoDB Atlas ($search, $vectorSearch)
 │
 └── Tauri native window
-└── loads React app (localhost:5173)
-└── fetches from backend via HTTP
+      └── loads the React app (localhost:5173)
+            └── fetches from the backend over HTTP
 ```
 
-The backend and frontend are independent processes launched together with `concurrently`. Tauri is just the desktop container, and all app logic lives in React and Express.
+The backend and frontend are independent processes started together by
+`concurrently`. Tauri is only the desktop container, so all the application
+logic lives in React and Express.
+
+Want more depth? [save-note.md](save-note.md) and
+[semantic-search.md](semantic-search.md) trace a single user action all the way
+through this stack.
