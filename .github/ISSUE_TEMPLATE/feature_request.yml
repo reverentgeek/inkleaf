@@ -1,0 +1,39 @@
+name: Feature request or idea
+description: Suggest an improvement to Inkleaf
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before filing: Inkleaf is deliberately a **single-user, offline-first
+        desktop notebook** that demonstrates Atlas Search and Vector Search. It
+        is not aiming to become a multi-user product or a hosted service. See
+        [CONTRIBUTING.md](https://github.com/reverentgeek/inkleaf/blob/main/CONTRIBUTING.md#scope)
+        for scope.
+
+        The sketches in `docs/` marked *possible future idea* are thought
+        experiments, not planned work.
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem would this solve?
+      description: Describe the friction you hit, not just the feature you want.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What would you like to see?
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives you considered
+      description: Including any workaround you are using today.
+  - type: checkboxes
+    id: help
+    attributes:
+      label: Would you like to work on this?
+      options:
+        - label: I would be willing to open a pull request for this

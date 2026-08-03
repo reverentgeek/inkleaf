@@ -1,0 +1,90 @@
+name: Bug report
+description: Something in Inkleaf is broken or behaves unexpectedly
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the report! Please **redact your connection string, API keys,
+        and any private note contents** from logs and screenshots.
+
+        For security problems, do not file an issue — see
+        [SECURITY.md](https://github.com/reverentgeek/inkleaf/blob/main/SECURITY.md).
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What did you expect, and what happened instead?
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. ...
+        2. ...
+        3. ...
+    validations:
+      required: true
+  - type: dropdown
+    id: mode
+    attributes:
+      label: How are you running it?
+      options:
+        - Desktop / Tauri (pnpm dev:tauri)
+        - Browser (pnpm dev)
+        - Packaged build (.dmg / .app)
+        - A CLI script (seed, create-indexes, reembed)
+    validations:
+      required: true
+  - type: input
+    id: os
+    attributes:
+      label: Operating system
+      placeholder: "macOS 15.3 (Apple Silicon) / Windows 11 / Ubuntu 24.04"
+    validations:
+      required: true
+  - type: input
+    id: node
+    attributes:
+      label: Node version
+      description: Output of `node -v` (Inkleaf requires 22.5+)
+      placeholder: v24.19.0
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Which area does this affect?
+      options:
+        - Editor / preview
+        - Text search (Atlas Search)
+        - Semantic search / related notes (Vector Search)
+        - Offline behavior or sync
+        - Delete / trash / restore
+        - Import / export
+        - Setup, seeding, or indexes
+        - Something else / not sure
+    validations:
+      required: true
+  - type: input
+    id: embeddings
+    attributes:
+      label: Embedding provider
+      description: Only relevant for semantic search issues
+      placeholder: "voyage (default) / openai / none configured"
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant output
+      description: Backend console output or webview console errors, if any.
+      render: text
+  - type: checkboxes
+    id: offline
+    attributes:
+      label: Connectivity
+      options:
+        - label: This also happens when Atlas is reachable
+        - label: This only happens offline / when Atlas is unreachable
+        - label: My IP is in the Atlas Network Access allowlist

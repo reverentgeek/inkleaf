@@ -1,0 +1,11 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Setup help / usage question
+    url: https://github.com/reverentgeek/inkleaf/discussions
+    about: Trouble getting Inkleaf running, or a question about how it works? Ask here rather than opening a bug.
+  - name: Report a security vulnerability
+    url: https://github.com/reverentgeek/inkleaf/security/advisories/new
+    about: Please report security issues privately, never as a public issue.
+  - name: MongoDB Atlas Search documentation
+    url: https://www.mongodb.com/docs/atlas/atlas-search/
+    about: Questions about Atlas Search or Vector Search itself are best answered in MongoDB's docs and community forums.

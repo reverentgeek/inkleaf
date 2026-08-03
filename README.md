@@ -219,6 +219,14 @@ plus a few exploratory sketches of directions Inkleaf *could* take. Those
 sketches are labeled **possible future ideas** — none of it is planned,
 scheduled, or built.
 
+## Contributing
+
+Bug reports and fixes are welcome — see [CONTRIBUTING.md](CONTRIBUTING.md) for
+setup, scope, and what to verify before opening a pull request. Please open an
+issue before starting anything large. Security issues should be
+[reported privately](SECURITY.md), never as a public issue. Participation is
+governed by the [Code of Conduct](CODE_OF_CONDUCT.md).
+
 ## License
 
 [MIT](LICENSE)
