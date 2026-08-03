@@ -1,4 +1,11 @@
-# Hosted API Refactor — Implementation Checklist
+# Hosted API Refactor — Possible Future Idea
+
+> **Status: exploratory sketch — not planned, scheduled, or committed.** This
+> describes a direction Inkleaf *could* take, written as a checklist because
+> that was the easiest way to think it through. None of it is implemented.
+> Inkleaf today is a single-user desktop app whose backend runs locally and
+> talks to Atlas directly — see the [README](../README.md) for what actually
+> exists. Kept in the repo because the reasoning may be useful to others.
 
 Split the monolithic `backend/` into a **hosted API server** (Atlas + OpenAI +
 auth) and a **local offline agent** (SQLite + sync driver), so MongoDB code runs

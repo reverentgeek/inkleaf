@@ -1,8 +1,14 @@
-# Cross-Platform Client Architecture
+# Cross-Platform Client Architecture — Possible Future Idea
 
-**Status:** Draft — three candidates under evaluation
-**Scope:** How Inkleaf should be structured to run on desktop and mobile once
-the backend moves to a hosted, multi-tenant API.
+> **Status: exploratory sketch — not planned, scheduled, or committed.** Weighs
+> three hypothetical approaches to running Inkleaf beyond the macOS desktop.
+> None has been chosen or started, and it builds on the equally speculative
+> hosted API in `hosted-api-refactor-plan.md`. See the [README](../README.md)
+> for what exists today. Kept in the repo because the reasoning may be useful
+> to others.
+
+**Scope:** How Inkleaf could be structured to run on desktop and mobile if the
+backend ever moved to a hosted, multi-tenant API.
 
 ## Background
 

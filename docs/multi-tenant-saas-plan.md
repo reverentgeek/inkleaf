@@ -1,4 +1,11 @@
-# Multi-Tenant SaaS Variant — Design Sketch
+# Multi-Tenant SaaS Variant — Possible Future Idea
+
+> **Status: exploratory sketch — not planned, scheduled, or committed.** A
+> thought experiment about what Inkleaf would need if it ever became a hosted
+> multi-tenant product. There is no plan to build this, and no SaaS offering
+> exists or is intended. Inkleaf is a single-user desktop app — see the
+> [README](../README.md). Kept in the repo because the reasoning may be useful
+> to others.
 
 A companion to `hosted-api-refactor-plan.md`. That plan splits the backend into a
 hosted API + local offline agent for a **single user**. This sketch describes

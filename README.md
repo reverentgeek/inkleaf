@@ -211,6 +211,14 @@ Notes are stored in a local SQLite database (`backend/data/inkleaf.db`) and serv
 | Local store | SQLite via built-in `node:sqlite` (FTS5) |
 | Embeddings | Voyage AI `voyage-4-lite` or OpenAI `text-embedding-3-small` |
 
+## Docs
+
+The [`docs/`](docs/) folder has walkthroughs of how the app works today
+([saving a note](docs/save-note.md), [semantic search](docs/semantic-search.md)),
+plus a few exploratory sketches of directions Inkleaf *could* take. Those
+sketches are labeled **possible future ideas** — none of it is planned,
+scheduled, or built.
+
 ## License
 
 [MIT](LICENSE)
