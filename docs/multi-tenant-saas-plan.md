@@ -1,11 +1,11 @@
-# Multi-Tenant SaaS Variant — Possible Future Idea
+# Multi-Tenant SaaS Variant: A Possible Future Idea
 
-> **Status: exploratory sketch — not planned, scheduled, or committed.** A
+> **Status: exploratory sketch, not planned, scheduled, or committed.** A
 > thought experiment about what Inkleaf would need if it ever became a hosted
-> multi-tenant product. There is no plan to build this, and no SaaS offering
-> exists or is intended. Inkleaf is a single-user desktop app — see the
-> [README](../README.md). Kept in the repo because the reasoning may be useful
-> to others.
+> multi-tenant product. There's no plan to build this, and no SaaS offering
+> exists or is intended. Inkleaf is a single-user desktop app, as described in
+> the [README](../README.md). Kept around because the reasoning may be useful
+> to someone.
 
 A companion to `hosted-api-refactor-plan.md`. That plan splits the backend into a
 hosted API + local offline agent for a **single user**. This sketch describes
@@ -19,7 +19,7 @@ what changes if Inkleaf becomes a **multi-tenant SaaS** that many people/orgs us
 
 The current design bakes in single-user assumptions that break under
 multi-tenancy:
-- One `notes` collection, one Atlas Search index, one vector index — **no tenant
+- One `notes` collection, one Atlas Search index, one vector index, so **no tenant
   dimension** anywhere.
 - Planned auth is a single env-configured user (`AUTH_USERNAME` / `AUTH_PASSWORD_HASH`).
 - The offline-first **local agent + SQLite** is a *desktop* feature; "lots of
@@ -29,7 +29,7 @@ multi-tenancy:
 
 ## Decisions to make up front
 
-These gate everything else — answer before writing code.
+These gate everything else, so answer them before writing code.
 
 1. **Client model: web app or many desktop installs?**
    - **Web SaaS (recommended for "lots of people")** → drop the local Node agent
@@ -40,10 +40,10 @@ These gate everything else — answer before writing code.
      but the agent authenticates as a tenant user and all sync carries `tenantId`.
    - This sketch assumes **web SaaS**; call-outs mark where desktop differs.
 
-2. **Tenancy isolation model** (see below) — shared collection vs. DB-per-tenant
+2. **Tenancy isolation model** (see below): shared collection vs. DB-per-tenant
    vs. cluster-per-tenant.
 
-3. **Build auth or buy it** — strongly recommend **buy** (Auth0 / Clerk / WorkOS
+3. **Build auth or buy it**. Strongly recommend **buy** (Auth0 / Clerk / WorkOS
    / Supabase Auth). This is where SaaS teams lose months.
 
 ---
@@ -54,15 +54,15 @@ These gate everything else — answer before writing code.
 | Model | Isolation | Cost | Search/Vector index | Verdict |
 |---|---|---|---|---|
 | **Shared collection + `tenantId`** | Logical (query-enforced) | Lowest | One shared index, filtered by `tenantId` | **Recommended** to start |
-| **DB-per-tenant** | Strong | Medium (index per DB) | Index per DB — multiplies index count | For enterprise/compliance tiers |
+| **DB-per-tenant** | Strong | Medium (index per DB) | Index per DB, multiplying index count | For enterprise/compliance tiers |
 | **Cluster-per-tenant** | Hardest | Highest | Fully isolated | Only for large/regulated customers |
 
 ### Recommended: shared collection + `tenantId`
 - Add `tenantId` (and `userId`, and probably `orgId`) to every `notes` document.
 - **Every** query, `$search`, and `$vectorSearch` pipeline MUST filter by
-  `tenantId`. A missing filter is a cross-tenant data leak — the #1 SaaS bug class.
+  `tenantId`. A missing filter is a cross-tenant data leak, the #1 SaaS bug class.
   - `$search`/`$vectorSearch`: add a `filter`/`$match` on `tenantId`
-    (`$vectorSearch` supports a `filter` on indexed fields — add `tenantId` to the
+    (`$vectorSearch` supports a `filter` on indexed fields, so add `tenantId` to the
     vector index definition as a filter field).
   - Enforce structurally: a repository layer that **requires** a tenant context
     and injects the filter, so no route can forget it. Never build raw pipelines
@@ -72,7 +72,7 @@ These gate everything else — answer before writing code.
 
 ### Atlas Search / Vector at scale
 - Keep **one** `notes_search_index` and **one** `notes_vector_index`, both
-  tenant-filtered — avoids index sprawl and per-tenant index build cost.
+  tenant-filtered, which avoids index sprawl and per-tenant index build cost.
 - Add `tenantId` as a `token`/filter field to `notes_search_index` and as a
   `filter` field to `notes_vector_index`.
 
@@ -125,7 +125,7 @@ Build the hosted server on **Fastify** (greenfield anyway):
 
 ## 7. Operational concerns (new at SaaS scale)
 - Per-tenant observability (traces/metrics/logs filterable by `tenantId`).
-- Data export / deletion (GDPR "right to be forgotten" — easy with `tenantId`
+- Data export / deletion (GDPR "right to be forgotten", which is easy with `tenantId`
   filter; verify it cascades to Atlas indexes).
 - Backups + point-in-time recovery; tenant-level restore story.
 - Multi-region / data residency for enterprise (ties back to tenancy model).
@@ -135,7 +135,7 @@ Build the hosted server on **Fastify** (greenfield anyway):
 
 ## Suggested migration path (from the base plan)
 
-1. Land the base single-user hosted-API refactor first (it's a prerequisite —
+1. Land the base single-user hosted-API refactor first (it's a prerequisite,
    secrets off client, hosted server exists).
 2. Introduce `tenantId`/`userId` on `notes` + repository layer that enforces the
    tenant filter everywhere (add tenant fields to both Atlas indexes).

@@ -1,6 +1,6 @@
-# Cross-Platform Client Architecture — Possible Future Idea
+# Cross-Platform Client Architecture: A Possible Future Idea
 
-> **Status: exploratory sketch — not planned, scheduled, or committed.** Weighs
+> **Status: exploratory sketch, not planned, scheduled, or committed.** Weighs
 > three hypothetical approaches to running Inkleaf beyond the macOS desktop.
 > None has been chosen or started, and it builds on the equally speculative
 > hosted API in `hosted-api-refactor-plan.md`. See the [README](../README.md)
@@ -30,32 +30,32 @@ question this doc answers is: **what shells do we build that client in?**
 
 Three candidates are on the table:
 
-- **Electron + Capacitor** — keeps the whole stack in TypeScript/JavaScript and
+- **Electron + Capacitor**: keeps the whole stack in TypeScript/JavaScript and
   reuses the existing React DOM UI in a webview.
-- **Tauri** — reuses the React DOM UI in a webview, but puts the on-device core
+- **Tauri**: reuses the React DOM UI in a webview, but puts the on-device core
   in Rust.
-- **Flutter** — a ground-up rewrite in Dart with its own rendering engine,
+- **Flutter**: a ground-up rewrite in Dart with its own rendering engine,
   trading all reuse for one codebase across every platform.
 
 Note the split: Electron+Capacitor and Tauri both render *your existing React
 UI* in a webview, so for those two the decision is about the on-device core
-language and footprint, not the UI. Flutter is a different bet entirely — no
-React, no webview — so it's compared on different terms.
+language and footprint, not the UI. Flutter is a different bet entirely, with no
+React and no webview, so it's compared on different terms.
 
 ## Goals
 
 - Maximize shared code across desktop, mobile, and (optionally) web.
 - Preserve a strong offline experience on every platform.
 - Minimize long-term maintenance burden (number of languages and codebases).
-- Keep a good — ideally native-feeling — mobile experience.
+- Keep a good, ideally native-feeling, mobile experience.
 
 ## Options Considered
 
-### Option A — Electron (desktop) + Capacitor (mobile)
+### Option A: Electron (desktop) + Capacitor (mobile)
 
 Both shells run the same React DOM application: Electron (bundled Chromium) on
-the desktop, a system WebView on mobile. The on-device core — local SQLite store
-and the sync client that talks to the hosted API — is TypeScript, running in
+the desktop, a system WebView on mobile. The on-device core (the local SQLite store
+and the sync client that talks to the hosted API) is TypeScript, running in
 Electron's Node main process on desktop and as JS in the WebView (via Capacitor
 plugins) on mobile. Native device features come through Capacitor plugins.
 
@@ -68,36 +68,36 @@ plugins) on mobile. Native device features come through Capacitor plugins.
 - **Rendering:** consistent Chromium on desktop; mobile uses platform WebViews.
 - **Mobile maturity:** Capacitor's mobile tooling is mature and battle-tested.
 
-### Option B — Tauri (desktop and mobile)
+### Option B: Tauri (desktop and mobile)
 
 The architecture Tauri is designed for: the on-device core is a Rust crate, and
 the React UI calls it via `invoke()` (IPC) instead of `fetch()`. Tauri uses the
 OS webview on every platform (WebView2 / WKWebView / WebKitGTK).
 
 - **Code sharing:** UI (React DOM) shares across Tauri desktop and mobile; the
-  Rust core shares across both too — but it cannot serve a web/PWA build (no Rust
+  Rust core shares across both too, but it cannot serve a web/PWA build (no Rust
   in the browser).
 - **Effort:** higher. Requires porting the storage layer and sync client to
   Rust. More tractable than it once was: under the hosted-API direction the
-  on-device core no longer needs the MongoDB driver or OpenAI — it is just local
+  on-device core no longer needs the MongoDB driver or OpenAI. It is just local
   SQLite (`rusqlite`/`sqlx`, FTS5) plus an HTTP sync client (`reqwest`).
-- **Footprint:** lean. OS webview, no bundled Chromium — small binaries, low
+- **Footprint:** lean. OS webview, no bundled Chromium, so small binaries, low
   memory.
 - **Rendering:** relies on per-platform webview engines, so rendering can vary.
 - **Mobile maturity:** Tauri's mobile targets are newer and less battle-tested.
 
-### Option C — Flutter (all platforms)
+### Option C: Flutter (all platforms)
 
 A single Dart codebase compiled to native ARM, rendering its own UI (Impeller).
 One codebase targets iOS, Android, macOS, Windows, Linux, and web. The on-device
 core (SQLite + sync client) and UI are all rewritten in Dart; the app talks to
 the same hosted API over HTTP.
 
-- **Code sharing:** none with the current React/TS code — but one Dart codebase
+- **Code sharing:** none with the current React/TS code, but one Dart codebase
   covers *all six* platforms, collapsing the desktop and mobile shells into one.
 - **Effort:** highest upfront. A full rewrite in a new (if JS-friendly) language;
   the editor and preview are rebuilt rather than reused.
-- **Footprint:** medium. AOT-compiled native, with an engine baseline — bigger
+- **Footprint:** medium. AOT-compiled native, with an engine baseline, so bigger
   than truly native, far smaller than Electron.
 - **Rendering:** its own engine, pixel-consistent across every platform.
 - **Mobile maturity:** mature on mobile; desktop is stable but younger; the web
@@ -114,7 +114,7 @@ the same hosted API over HTTP.
   - **Custom canvas-grade UI** (linked-note graph views, ink/handwriting,
     diagrams) and high-performance large-document handling without webview limits.
 - **Honest costs:** the Dart rewrite with zero reuse; text/IME/accessibility
-  edge cases in a text-heavy editor (Flutter draws its own text — prototype this
+  edge cases in a text-heavy editor (Flutter draws its own text, so prototype this
   early); and a weak web target.
 
 ## Comparison
@@ -141,7 +141,7 @@ There is no single winner; it depends on which priority dominates.
 
 **Lean Electron + Capacitor if:**
 
-- Speed to ship and lowest effort matter most — it reuses the existing
+- Speed to ship and lowest effort matter most, since it reuses the existing
   TypeScript logic instead of a rewrite or a Rust port.
 - One language across the whole stack is a hard preference.
 - A browser/PWA build is wanted (the TS core serves it).
@@ -158,7 +158,7 @@ There is no single winner; it depends on which priority dominates.
 
 **Lean Flutter if:**
 
-- You'll trade a Dart rewrite for one codebase across all six platforms — no
+- You'll trade a Dart rewrite for one codebase across all six platforms, with no
   separate desktop and mobile shells to maintain.
 - The long-term product ceiling matters: on-device AI (offline semantic search),
   rich custom/canvas UI, and high-performance large-document handling.
@@ -179,18 +179,18 @@ under **Electron + Capacitor**:
 ```text
 packages/
   core/         # domain types, API client, Zustand stores, Zod schemas,
-                # sync orchestration — no platform APIs
+                # sync orchestration, no platform APIs
   storage/      # storage interface + per-platform implementations
   ui/           # shared React DOM components, editor, preview
 apps/
-  desktop/      # Electron shell — mounts packages/ui
-  mobile/       # Capacitor shell — mounts packages/ui
+  desktop/      # Electron shell, mounts packages/ui
+  mobile/       # Capacitor shell, mounts packages/ui
   web/          # optional browser / PWA build
 ```
 
 Under **Tauri**, the `ui` package stays shared, but `core`/`storage`/sync become
 a Rust crate behind the `invoke()` boundary instead of TS packages, and there is
-no `web` target. Under **Flutter**, none of this applies — it is a separate Dart
+no `web` target. Under **Flutter**, none of this applies. It is a separate Dart
 project with its own structure that shares only the hosted-API contract, not
 code. (That shared contract is what keeps even the no-reuse path single-sourced
 on the server side.)
@@ -208,7 +208,7 @@ Budget for these regardless of choice.
 
 - **The editor.** CodeMirror is DOM-based, so it reuses cleanly on Electron+
   Capacitor and Tauri (both render the UI in a webview). Flutter is the exception
-  — the editor is rebuilt (`super_editor` / `flutter_quill`), and its text/IME/
+  The editor is rebuilt (`super_editor` / `flutter_quill`), and its text/IME/
   accessibility behavior should be prototyped early.
 
 - **Background sync.** Mobile OSes (iOS especially) restrict background
@@ -217,7 +217,7 @@ Budget for these regardless of choice.
   background-task plugins), not a long-running daemon.
 
 - **Secure token storage.** The user's auth token needs platform secure storage
-  (Keychain / Keystore) — a Capacitor plugin, a Tauri Rust plugin, or a Flutter
+  (Keychain / Keystore) via a Capacitor plugin, a Tauri Rust plugin, or a Flutter
   secure-storage package.
 
 ## What Does Not Change
@@ -226,7 +226,7 @@ The hosted-API direction simplifies the client on all three paths: every platfor
 talks to the **same HTTP API**, so there is no per-platform sync target. Atlas
 Search, Vector Search, and embedding generation already run server-side and
 online-only, so moving them behind the hosted API costs nothing in offline
-capability — the device keeps SQLite FTS5 as its offline search. (Flutter could
+capability, and the device keeps SQLite FTS5 as its offline search. (Flutter could
 later go further and add on-device semantic search, but that is upside, not a
 requirement.)
 
@@ -246,8 +246,8 @@ requirement.)
 
 ## Further Reading
 
-- Capacitor — <https://capacitorjs.com/docs> (see the chat thread for the
+- Capacitor: <https://capacitorjs.com/docs> (see the chat thread for the
   annotated resource list).
-- Tauri v2, incl. mobile — <https://v2.tauri.app>.
-- Flutter — <https://docs.flutter.dev>; AppFlowy (Flutter notes app) —
+- Tauri v2, incl. mobile: <https://v2.tauri.app>.
+- Flutter: <https://docs.flutter.dev>; AppFlowy (Flutter notes app):
   <https://github.com/AppFlowy-IO/AppFlowy>.

@@ -1,6 +1,6 @@
 # Possible Future Ideas
 
-> **Status: ideas only — not planned, scheduled, or committed.** A scratch list
+> **Status: ideas only, not planned, scheduled, or committed.** A scratch list
 > of things that might be interesting to build. Nothing here is implemented or
 > promised, and items may be dropped without ever being started.
 

@@ -1,6 +1,6 @@
 # Walkthrough: Semantic Search
 
-Traces the full data flow when a user performs a semantic (vector) search in Inkleaf — from the keyboard shortcut through OpenAI embedding to MongoDB Atlas Vector Search and back to the UI.
+Traces the full data flow when a user performs a semantic (vector) search in Inkleaf, from the keyboard shortcut through OpenAI embedding to MongoDB Atlas Vector Search and back to the UI.
 
 ```text
  Tauri Webview (localhost:5173)              Express Backend (localhost:3001)
@@ -31,7 +31,7 @@ Traces the full data flow when a user performs a semantic (vector) search in Ink
 
 ---
 
-## Step 1: Keyboard Shortcut — `Cmd+Shift+K`
+## Step 1: Keyboard Shortcut, `Cmd+Shift+K`
 
 Global keyboard shortcuts are registered in `App.tsx` via a `useEffect`:
 
@@ -74,7 +74,7 @@ const mode = useAppStore((s) => s.commandPaletteMode);
 const setMode = useAppStore((s) => s.setCommandPaletteMode);
 ```
 
-The palette displays two tabs — **Text Search** and **Semantic Search** — with the active tab highlighted in emerald. In semantic mode, the placeholder reads "Describe what you're looking for..." (vs. "Search notes..." in text mode).
+The palette displays two tabs, **Text Search** and **Semantic Search**, with the active tab highlighted in emerald. In semantic mode, the placeholder reads "Describe what you're looking for..." (vs. "Search notes..." in text mode).
 
 As the user types, a **200ms debounce** prevents excessive API calls:
 
@@ -108,7 +108,7 @@ When mode is `"semantic"`, only `semanticSearch(query)` is called (no autocomple
 
 ---
 
-## Step 3: useSearch Hook — `semanticSearch()`
+## Step 3: useSearch Hook, `semanticSearch()`
 
 The `useSearch` hook manages search state and API calls:
 
@@ -153,7 +153,7 @@ semantic: {
 
 This fires `GET http://localhost:3001/api/semantic/search?q=how%20does%20aggregation%20work` (the query is URL-encoded).
 
-The request passes through the Tauri CSP gate — `connect-src http://localhost:3001` in `frontend/src-tauri/tauri.conf.json:22` whitelists the backend origin.
+The request passes through the Tauri CSP gate. `connect-src http://localhost:3001` in `frontend/src-tauri/tauri.conf.json:22` whitelists the backend origin.
 
 ---
 
@@ -179,7 +179,7 @@ Validates that `q` is present, then delegates to the service layer.
 
 ---
 
-## Step 6: Query Embedding — Vectorize the Search Text
+## Step 6: Query Embedding, Vectorize the Search Text
 
 The service first converts the user's natural-language query into a vector:
 
@@ -203,13 +203,13 @@ const response = await client.embeddings.create({
 return response.data[0].embedding;
 ```
 
-This returns a **1536-dimensional float vector** representing the semantic meaning of the query. The same model (`text-embedding-3-small`) is used for both note embeddings and query embeddings — this is critical because vector similarity only works when both sides use the same embedding model and dimensions.
+This returns a **1536-dimensional float vector** representing the semantic meaning of the query. The same model (`text-embedding-3-small`) is used for both note embeddings and query embeddings. This is critical because vector similarity only works when both sides use the same embedding model and dimensions.
 
 If `OPENAI_API_KEY` is not set, `generateEmbedding()` returns `null` and the search returns an empty array.
 
 ---
 
-## Step 7: Atlas Vector Search — `$vectorSearch` Aggregation
+## Step 7: Atlas Vector Search with `$vectorSearch` Aggregation
 
 With the query vector in hand, the service runs a MongoDB aggregation pipeline:
 

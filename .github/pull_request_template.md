@@ -1,6 +1,6 @@
 <!--
 Thanks for contributing! For anything beyond a small fix, please open an issue
-first — see CONTRIBUTING.md.
+first. See CONTRIBUTING.md.
 -->
 
 ## What does this change?
@@ -22,11 +22,11 @@ There is no automated test suite yet, so please say what you exercised by hand.
 - [ ] If search changed: checked both the Atlas path and the offline SQLite FTS5
       fallback
 
-<!-- Screenshots are helpful for UI changes — light and dark theme if relevant. -->
+<!-- Screenshots are helpful for UI changes. Light and dark theme if relevant. -->
 
 ## Checklist
 
 - [ ] No secrets, connection strings, or private note content in the diff,
       screenshots, or commit messages
-- [ ] Diff is limited to the change — no drive-by reformatting of untouched lines
+- [ ] Diff is limited to the change, with no drive-by reformatting of untouched lines
 - [ ] Docs updated if behavior or setup changed

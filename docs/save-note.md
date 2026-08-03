@@ -1,6 +1,6 @@
 # Walkthrough: Saving a Note
 
-Traces the full data flow when a user edits a note in Inkleaf — from keystrokes in the Tauri webview through to MongoDB Atlas and async embedding generation.
+Traces the full data flow when a user edits a note in Inkleaf, from keystrokes in the Tauri webview through to MongoDB Atlas and async embedding generation.
 
 ```text
  Tauri Webview (localhost:5173)              Express Backend (localhost:3001)
@@ -29,7 +29,7 @@ Traces the full data flow when a user edits a note in Inkleaf — from keystroke
                                              1536-dim vector stored on `embedding` field
 ```
 
-## Step 1: Tauri Webview — User Types in the Editor
+## Step 1: Tauri Webview, User Types in the Editor
 
 The user types inside a **CodeMirror 6** editor rendered by `MarkdownEditor`. Every keystroke triggers CodeMirror's `onChange` callback, which propagates up to `Layout.tsx`.
 
@@ -77,7 +77,7 @@ const updateNote = useCallback(
 );
 ```
 
-1. **Optimistic update**: `setNotes()` immediately updates the Zustand store with the new markdown, so the UI feels instant — no loading spinner, no waiting.
+1. **Optimistic update**: `setNotes()` immediately updates the Zustand store with the new markdown, so the UI feels instant, with no loading spinner and no waiting.
 2. **Debounce (400ms)**: The actual HTTP request is delayed. Each new keystroke resets the timer. The request only fires 400ms after the user stops typing.
 
 The Zustand store (`frontend/src/stores/appStore.ts:35`) holds the `notes` array:
@@ -189,7 +189,7 @@ Key details:
 
 ## Step 7: Async Embedding Generation (Fire-and-Forget)
 
-If any content field changed (`markdown`, `title`, or `tags`), the service calls `updateEmbedding()` **without awaiting it** — this is a fire-and-forget operation that runs after the HTTP response is already sent.
+If any content field changed (`markdown`, `title`, or `tags`), the service calls `updateEmbedding()` **without awaiting it**. This is a fire-and-forget operation that runs after the HTTP response is already sent.
 
 **`backend/src/services/notes.service.ts:12-25`**
 
@@ -212,7 +212,7 @@ async function updateEmbedding(noteId: ObjectId, note: Pick<Note, "title" | "mar
 
 This calls two functions from `backend/src/services/embeddings.ts`:
 
-1. **`prepareTextForEmbedding()`** (`embeddings.ts:14-22`) — concatenates title, markdown, and tags (comma-separated) into a single string, truncated to 8,000 characters:
+1. **`prepareTextForEmbedding()`** (`embeddings.ts:14-22`) concatenates title, markdown, and tags (comma-separated) into a single string, truncated to 8,000 characters:
 
    ```ts
    const parts = [title, markdown, tags.join(", ")];
@@ -220,7 +220,7 @@ This calls two functions from `backend/src/services/embeddings.ts`:
    return combined.slice(0, 8000);
    ```
 
-2. **`generateEmbedding()`** (`embeddings.ts:24-39`) — sends the text to OpenAI's `text-embedding-3-small` model and returns a 1536-dimensional vector:
+2. **`generateEmbedding()`** (`embeddings.ts:24-39`) sends the text to OpenAI's `text-embedding-3-small` model and returns a 1536-dimensional vector:
 
    ```ts
    const response = await client.embeddings.create({

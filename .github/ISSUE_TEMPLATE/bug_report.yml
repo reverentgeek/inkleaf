@@ -8,7 +8,7 @@ body:
         Thanks for the report! Please **redact your connection string, API keys,
         and any private note contents** from logs and screenshots.
 
-        For security problems, do not file an issue — see
+        For security problems, please don't file an issue. See
         [SECURITY.md](https://github.com/reverentgeek/inkleaf/blob/main/SECURITY.md).
   - type: textarea
     id: what-happened

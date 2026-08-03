@@ -1,97 +1,71 @@
 # Contributing to Inkleaf
 
-Thanks for your interest! Inkleaf is a personal project and a demo of MongoDB
-Atlas Search and Atlas Vector Search, maintained in spare time. That shapes what
-contributions fit best — please read the scope note before starting anything
-large.
+Thanks for being here! Inkleaf is a personal project and a demo of Atlas Search and Atlas Vector Search, built in spare time. That shapes what fits well, so please skim the scope note before you start anything big.
 
-## Scope
+## What's in scope
 
-Inkleaf is deliberately small: a **single-user, offline-first desktop Markdown
-notebook** that shows off Atlas Search and Vector Search. It is not trying to
-become a multi-user product, a hosted service, or a general-purpose note app.
+Inkleaf is deliberately small: a **single-user, offline-first desktop Markdown notebook** that shows off Atlas Search and Atlas Vector Search. It isn't trying to become a multi-user product, a hosted service, or a general-purpose note app that does everything.
 
-Most welcome:
+Things I'd love help with:
 
-- Bug fixes, with steps to reproduce
-- Cross-platform fixes — it is developed and tested on macOS, so Windows and
-  Linux are under-exercised (the keyboard shortcuts in particular assume Cmd)
-- Documentation corrections, especially anywhere the docs drift from the code
-- Accessibility and keyboard-navigation improvements
+- **Bug fixes**, ideally with steps to reproduce
+- **Cross-platform fixes**, since it's developed and tested on macOS and the keyboard shortcuts all assume Cmd. Windows and Linux need attention.
+- **Documentation corrections**, especially anywhere the docs have drifted from the code
+- **Accessibility and keyboard navigation** improvements
 
-Please **open an issue before** starting on:
+Please **open an issue first** for:
 
-- New features or UI surfaces
+- New features or new UI surfaces
 - New dependencies
-- Anything touching the sync engine, soft-delete/tombstone behavior, or the
-  SQLite schema — these have subtle correctness constraints and are easy to
-  break in ways tests would not currently catch
-- Anything in the `docs/` sketches labeled *possible future idea*; those are
-  thought experiments, not an invitation to implement them
+- Anything touching the sync engine, the soft-delete and tombstone behavior, or the SQLite schema. These have subtle correctness constraints and are easy to break in ways nothing would currently catch.
+- Anything in the `docs/` sketches labeled *possible future idea*. Those are thought experiments, not a to-do list.
 
-This keeps you from spending time on something that may not get merged.
+This isn't gatekeeping. It's so you don't spend a weekend on something that turns out not to fit.
 
 ## Getting set up
 
-See the [README](README.md) for full setup. In short:
+The [README](README.md) has the full walkthrough. The short version:
 
 ```bash
-pnpm install         # requires Node 22.5+ (enforced) — Node 24+ recommended
+pnpm install         # needs Node 22.5+ (enforced), Node 24+ preferred
 cp .env.example .env # add your MONGODB_URI
 pnpm create-indexes
 pnpm seed
-pnpm dev             # browser, no Rust needed
+pnpm dev             # browser, no Rust required
 pnpm dev:tauri       # desktop window, needs Rust
 ```
 
-You need your own MongoDB Atlas cluster (the free M0 tier is enough). Vector
-search additionally needs a Voyage AI or OpenAI key; text search, editing, and
-sync all work without one.
+You'll need your own MongoDB Atlas cluster, and the free M0 tier is plenty. Vector search also wants a Voyage AI or OpenAI key, but text search, editing, and sync all work without one.
 
 ## Before you open a pull request
 
-There is **no automated test suite yet**, so please verify by hand and say what
-you checked. At minimum:
+There's **no automated test suite yet**, so verification is manual. Please tell me what you actually exercised:
 
-- [ ] `pnpm build` passes (type-checks backend and frontend)
-- [ ] The app runs and the area you touched still works
-- [ ] If you touched sync or delete behavior: verify offline editing, coming back
-      online, soft delete, undo/restore, and permanent delete
-- [ ] If you touched search: verify both online (Atlas) and offline (SQLite
-      FTS5) paths — stop your network to exercise the fallback
+- [ ] `pnpm build` passes (this type-checks both backend and frontend)
+- [ ] The app runs and the part you touched still behaves
+- [ ] Touched sync or delete? Check offline editing, reconnecting, soft delete, undo/restore, and permanent delete.
+- [ ] Touched search? Check both the online Atlas path and the offline SQLite FTS5 fallback. Turning off your network is the easy way to exercise the fallback.
 
-Adding tests alongside a fix is very welcome, and setting up a first test
-harness or CI workflow would be a genuinely useful contribution.
+Adding tests alongside a fix is very welcome. Honestly, setting up the first test harness or a CI workflow would be one of the most useful contributions this repo could get.
 
 ## Conventions
 
-- **Style:** no linter or formatter is configured for the repo. Match the file
-  you are editing — indentation is inconsistent across the tree, and a PR that
-  reformats untouched lines is hard to review. Please keep diffs minimal.
-- **Backend imports** use `.js` extensions (NodeNext module resolution).
-- **Commits:** plain descriptive subject lines. Explain *why* in the body when
-  the reason is not obvious.
-- **Version bumps:** the app version lives in six files that must move together
-  (both root and workspace `package.json`s, `tauri.conf.json`, `Cargo.toml`, and
-  `Cargo.lock` via `cargo update -p inkleaf`). Maintainers normally handle this —
-  you do not need to bump versions in a PR.
-- **Never commit secrets.** `.env` is gitignored; keep real connection strings
-  and API keys out of code, tests, screenshots, and issue reports.
+- **Style**: there's no linter or formatter configured for the repo, so match the file you're editing. Indentation is inconsistent across the tree (sorry), and a diff that reformats untouched lines is painful to review. Small diffs, please.
+- **Backend imports** use `.js` extensions, thanks to NodeNext module resolution.
+- **Commits**: plain, descriptive subject lines. Use the body to explain *why* when the reason isn't obvious from the diff.
+- **Version bumps**: the app version lives in six files that have to move together (the root and workspace `package.json` files, `tauri.conf.json`, `Cargo.toml`, and `Cargo.lock` via `cargo update -p inkleaf`). I normally handle this, so you don't need to bump anything in a PR.
+- **Never commit secrets.** `.env` is gitignored. Keep real connection strings and API keys out of code, screenshots, and issue reports.
 
 ## Reporting bugs
 
-Use the issue templates. Please include your OS, Node version (`node -v`), and
-whether you are running desktop (`pnpm dev:tauri`) or browser (`pnpm dev`) mode,
-and redact your connection string.
+The issue templates will ask, so save yourself a round trip: include your OS, your Node version (`node -v`), and whether you're in desktop (`pnpm dev:tauri`) or browser (`pnpm dev`) mode. Redact your connection string.
 
-For anything security-related, **do not open a public issue** — see
-[SECURITY.md](SECURITY.md).
+Security issues are different. Please **don't** open a public issue for those. See [SECURITY.md](SECURITY.md).
 
 ## Code of conduct
 
-Participation is governed by the [Code of Conduct](CODE_OF_CONDUCT.md).
+Everyone here follows the [Code of Conduct](CODE_OF_CONDUCT.md). Be decent to each other.
 
 ## Licensing
 
-Inkleaf is [MIT licensed](LICENSE). By contributing, you agree your
-contributions are licensed under the same terms.
+Inkleaf is [MIT licensed](LICENSE). By contributing, you agree your contributions ship under the same license.
