@@ -4,7 +4,7 @@
 
 # Inkleaf
 
-A desktop Markdown knowledge base built with **Tauri v2**, **React**, and **MongoDB Atlas**, showing off Atlas Search, Atlas Vector Search, and hybrid search with `$rankFusion`.
+A desktop Markdown note-taking knowledge base built with **Tauri v2**, **React**, and **MongoDB Atlas**.
 
 ![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)
 
