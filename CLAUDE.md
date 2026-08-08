@@ -4,23 +4,16 @@ A Tauri v2 desktop app: personal Markdown knowledge base demonstrating MongoDB A
 
 ## Architecture
 
-- **Frontend**: React 19 + Vite 7 + Tailwind CSS 4, runs in Tauri v2 webview (localhost:5173)
-- **Backend**: Express 5 + TypeScript on Node.js, standalone process (localhost:3001)
-- **Database**: MongoDB Atlas — `notes` collection (searchable)
+- **Two processes, not one**: the backend is a standalone Express server on `localhost:3001`, separate from the Tauri v2 webview on `localhost:5173`. They are launched together via `concurrently` from the root scripts.
 - **Search is one thing**: `GET /api/search` is the only query surface. `search.service.ts` picks a strategy and degrades: hybrid `$rankFusion` (online + embedding provider configured) → text-only `$search` (no embedding available) → SQLite FTS5 (offline). All three return the same `SearchResult` shape, so the frontend never branches on which engine answered. There is no semantic-only search mode; `/api/semantic` keeps only `related/:noteId` (note-to-note similarity, not query-driven).
 - **Offline-first**: notes CRUD is served from a local SQLite store (`backend/data/inkleaf.db`, via built-in `node:sqlite`); a background sync engine (`services/sync.service.ts`) pushes dirty rows to Atlas and pulls remote changes (last-write-wins by `updatedAt`, ID reconciliation handles remote *permanent* deletes + reseeds). Search falls back to SQLite FTS5 when Atlas is unreachable (keyword only, no vector half); related-notes is online-only (503 `{code:"OFFLINE"}`). `GET/POST /api/sync[/now]` exposes status; frontend polls it (`useSyncStatus`) into the Zustand store and shows a header indicator.
 - **Soft delete (recoverable)**: deleting a note trashes it — it's hidden from reads but kept. In SQLite `deleted=1` + `deleted_at` mark the tombstone; in Atlas the doc is kept with a `deletedAt` field (never removed). Restore clears both; **permanent** delete (`purge_pending=1`) is the only op that actually removes the Atlas doc + local row. Endpoints: `GET /api/notes/trash`, `POST /api/notes/:id/restore`, `DELETE /api/notes/:id/permanent` (plain `DELETE /api/notes/:id` = soft). Search must exclude trashed docs: Atlas full-text/vector pipelines add `$match: { deletedAt: null }` (including inside every `$rankFusion` sub-pipeline), local FTS filters `deleted=0`. Frontend surfaces an undo toast (`components/Toast.tsx`) after delete and a Trash view in the sidebar (`sidebarView` in the store).
-- **Package manager**: pnpm with workspaces (`frontend/`, `backend/`)
-- Processes launched together via `concurrently` from root scripts
 
 ## Scripts
 
-All run from the project root with `pnpm`:
+Standard invocations are in the root `package.json` (pnpm workspaces: `frontend/`, `backend/`). The non-obvious ones:
 
 ```bash
-pnpm dev              # Backend + Vite frontend (browser)
-pnpm dev:tauri        # Backend + Tauri desktop window
-pnpm build            # TypeScript compile + Vite production build
 pnpm seed             # Seed 17 sample notes (+ embeddings if OPENAI_API_KEY set); destructive — refuses if notes exist unless --force
 pnpm create-indexes   # Create Atlas Search + Vector Search indexes
 pnpm reembed          # Re-embed all notes with the configured provider; rebuilds the vector index if dimensions changed (use after switching EMBEDDING_PROVIDER). --keep-index to skip the index rebuild
@@ -37,40 +30,9 @@ The app version lives in **six** files that must be bumped together (they have d
 - `frontend/src-tauri/Cargo.toml`
 - `frontend/src-tauri/Cargo.lock` — regenerate with `cargo update -p inkleaf` (run in `frontend/src-tauri/`), don't hand-edit
 
-## Environment Variables (.env)
+## Reference
 
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `MONGODB_URI` | Yes | Atlas connection string |
-| `EMBEDDING_PROVIDER` | No (default `voyage`) | Embedding backend: `voyage` (MongoDB's Voyage AI) or `openai` |
-| `VOYAGE_API_KEY` | For Vector Search (voyage provider) | Voyage AI key; used against `https://ai.mongodb.com/v1/embeddings` |
-| `OPENAI_API_KEY` | For Vector Search (openai provider) | OpenAI API key (needs `text-embedding-3-small` access) |
-| `EMBEDDING_MODEL` | No | Override the model. Defaults: `voyage-4-lite` (voyage), `text-embedding-3-small` (openai) |
-| `EMBEDDING_DIMENSIONS` | No | Override vector dimensions. Defaults: 1024 (voyage), 1536 (openai). Must match the model and the Atlas vector index |
-| `PORT` | No (default 3001) | Backend port |
-| `MONGODB_DB` | No (default `inkleaf`) | Database name |
-| `SQLITE_PATH` | No (default `backend/data/inkleaf.db`) | Local offline store location |
-| `SYNC_INTERVAL_MS` | No (default 15000) | Background sync tick interval |
-| `HYBRID_TEXT_WEIGHT` | No (default 0.4) | `$rankFusion` weight for the full-text sub-pipeline |
-| `HYBRID_VECTOR_WEIGHT` | No (default 0.6) | `$rankFusion` weight for the vector sub-pipeline |
-
-## Atlas Indexes
-
-- **`notes_search_index`** (Atlas Search): title (string + autocomplete edgeGram), markdown (string), tags (keyword + token)
-- **`notes_vector_index`** (Vector Search): embedding field, `config.embeddingDimensions` dimensions (1536 openai / 1024 voyage), cosine similarity
-
-## Keyboard Shortcuts
-
-| Shortcut | Action |
-|----------|--------|
-| Cmd+N | Create a new note (focuses the title input) |
-| Cmd+K | Open command palette (hybrid search) |
-| Cmd+Shift+T | Toggle light/dark theme |
-| Cmd+\ | Toggle sidebar |
-| ↑ / ↓ | Previous / next note when the note list is focused |
-| Cmd+O | Import a Markdown file as a new note (desktop menu accelerator) |
-| Cmd+S | Export the active note as a Markdown file (desktop menu accelerator) |
-| Escape | Close command palette |
+Environment variables (`.env`) and keyboard shortcuts live in the **`inkleaf-reference` skill** (`.claude/skills/inkleaf-reference/SKILL.md`) — invoke it when configuring `.env` or touching shortcuts.
 
 ## Coding Patterns & Gotchas
 
