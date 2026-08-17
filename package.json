@@ -14,7 +14,7 @@
 		"clean": "rm -rf frontend/src-tauri/target"
 	},
 	"devDependencies": {
-		"concurrently": "^10.0.4"
+		"concurrently": "^10.0.5"
 	},
 	"engines": {
 		"node": ">=22.5.0"
